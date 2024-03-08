@@ -8,6 +8,17 @@ const app = express();
 dotenv.config();
 
 
+const cors = require("cors");
+
+
+app.use(
+    cors({
+        credentials: true,
+        origin: true,
+    }),
+);
+
+
 
 mongoose.connect(dbConfig.db).then(
     () => {
@@ -34,14 +45,13 @@ app.use("/users", require("./routes/users.routes"));
 
 
 app.use((err, req, res, next) => {
-    const statusCode = err.status || 500;  
-    const errorMessage = err.message || 'Đang có một số lỗi xảy ra!';
-    return res.status(statusCode).json({
-        success: false,
-        status: errorStatus,
-        message: errorMessage,
+    console.error(err.message);
+    if (!err.statusCode) err.statusCode = 500;
+    res.status(err.statusCode).send({
+      success: false,
+      message: err.message
     });
-});
+  });
 app.listen(process.env.PORT || 4000 ,()=> {
     console.log("Ready!!");
 } )
