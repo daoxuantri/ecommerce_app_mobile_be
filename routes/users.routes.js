@@ -8,7 +8,7 @@ router.post("/login", userController.login);
 
 
 
-const {sendOTP, verifyOTP} = require("../otp/controller");
+const {sendOTP, verifyOTP, sendVerificationOTPEmail} = require("../otp/controller");
 
 
 router.post("/verify", async (req,res) =>{
@@ -41,5 +41,26 @@ router.post("/forgotpass", async (req, res)=>{
         res.status(400).send(e.message);
     }
 });
+
+router.post("/email_verification", async (req, res)=>{
+    try{
+        const {email} = req.body; 
+        if (!email) throw Error("An email is required!");
+
+        const createdEmailVerificationOTP = await sendVerificationOTPEmail(email);
+
+        return res.status(200).json(createdEmailVerificationOTP);
+
+
+       
+
+    }
+    catch(e){
+        res.status(400).send(e.message);
+    }
+});
+
+
+
 
 module.exports = router;
