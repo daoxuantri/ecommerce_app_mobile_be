@@ -41,7 +41,7 @@ const verifyOTP = async ({email , otp}) =>{
     }
 }
 
-const sendOTP = async({email, subject, message, duration = 1}) =>{
+const sendOTP = async({email, subject, message, duration = 5}) =>{
     try{
         if(!(email && subject && message)){
             throw Error("Provide values for email, subject, message");
@@ -68,7 +68,7 @@ const sendOTP = async({email, subject, message, duration = 1}) =>{
             email,
             otp: hashedOTP,
             createdAt: Date.now(),
-            expiresAt: Date.now() + 3600000 * + duration,
+            expiresAt: Date.now() + 360000 * + duration,
         });
         const createdOTPRecord = await newOTP.save();
         return createdOTPRecord;
@@ -84,6 +84,11 @@ const deleteOTP = async (email) =>{
         throw e;
     }
 }
+
+
+
+
+///////////////////////////////////////////////////////
 
 const sendVerificationOTPEmail = async (email) => {
     try{
@@ -110,4 +115,17 @@ const sendVerificationOTPEmail = async (email) => {
     }
 }
 
-module.exports = { sendOTP, verifyOTP, deleteOTP, sendVerificationOTPEmail};
+const verifyUserEmail = async ({email, otp})=>{
+    try{
+        const validOTP = await verifyOTP({email, otp});
+        if(!validOTP){
+           return Error('kiem tr ahop thaoi');
+        }
+        await deleteOTP(email);
+        return ;
+    }catch(e){
+        throw e;
+    }
+}
+
+module.exports = { sendOTP, verifyOTP , sendVerificationOTPEmail, verifyUserEmail, deleteOTP};

@@ -53,10 +53,12 @@ userSchema.set("toJSON",{
         delete returnedObject.password;
         delete returnedObject.createdAt;
         delete returnedObject.updatedAt;
+        delete returnedObject.contact;
+            
         
         
 
     },
 });
 const User = mongoose.model("User",userSchema);
-module.exports= User;
+module.exports= User    

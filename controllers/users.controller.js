@@ -71,9 +71,42 @@ exports.login = async (req, res, next) => {
         if (isCorrectPassword && resultUser){
             const access_token = auth.generateAccessToken(resultUser._id); 
             // const { password, createdAt, updatedAt, _v , role , ...others} = resultUser._doc;
-            return res.status(200).json({ success: true, ...resultUser.toJSON(), access_token });
+            return res.status(200).json({ 
+                success: true, 
+                data: {
+                    ...resultUser.toJSON(),
+                    access_token: access_token,
+                },
+
+            });
             
         }
+
+            
+    } catch (err) {
+        return next(err);
+    }
+};
+
+
+exports.resetpass = async (req, res, next) => {
+    try {
+        const {email, password} = req.body;
+
+
+        //hashSync
+        const salt = bcryptjs.genSaltSync(10);
+        req.body.password = bcryptjs.hashSync(password, salt);
+
+        const saveUser = await User.findOneAndUpdate(
+            {email: email},
+            {password: req.body.password},
+            { new: true }
+        )
+        return res.status(200).json({
+            success : true,
+            message: "Cập nhật mật khẩu thành công."
+        })
 
             
     } catch (err) {

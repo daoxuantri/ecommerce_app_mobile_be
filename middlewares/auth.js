@@ -23,6 +23,12 @@ function generateAccessToken(id){
         expiresIn: "24h"
     });
 }
+
+function generateRefreshToken(id){
+  return jwt.sign({data: id}, process.env.JWT,{
+      expiresIn: "24h"
+  });
+}
 // const verifyTokenAndAdmin = (req, res, next) => {
 //   const {user} = req;
 //   if(!user.role) return sendError(res, "unauthorized access!");
@@ -51,4 +57,5 @@ module.exports={
     authenticateToken,
     generateAccessToken,
     verifyTokenAndAdmin,
+    generateRefreshToken
 };
