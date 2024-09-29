@@ -1,52 +1,44 @@
 const mongoose = require("mongoose");
 const {Schema} = mongoose;
 const productSchema = new Schema ({
-    pro_cat:{
-        type: mongoose.Schema.Types.ObjectId,
-        ref : "Category",
-    },
-    pro_brand:{
-        type: mongoose.Schema.Types.ObjectId,
-        required : "Brand",
-    },
-    pro_name:{
-        type: String,
-        required: true,
-        trim : true ,
-    },
-    pro_price:{
-        type: Number,
-        required : true,
-    },
-    pro_description:{
-        type: String,
+    name: {
+        type : String,
+        required : true
     },
     images:{
         type: [String],
         required: true
     },
-    pro_countInStock:{
-        type: Number,
-        required: true,
+    category: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Category",
     },
-    pro_rating: {
-        type: Number,
-        default: 0,
-        min: 0,
-        max: 5,
+    brand: {
+        type : mongoose.Schema.Types.ObjectId,
+        ref: "Brand",
     },
-    pro_numReviews: {
-        type: Number,
-        default: 0,
+    description: {
+        type : String
     },
-    pro_reviews: [
-        {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "Review",
-        },
-    ],
-
-
+    price: {
+        type : Number,
+    },
+    rating: {
+        type : Number,
+        default: 0 ,
+    },
+    sold: {
+        type : Number,
+        default: 0 ,
+    },
+    status: {
+        type : Boolean,
+        default : true
+    },
+    isStock: {
+        type : Boolean,
+        default : true
+    }
 
 },{ timestamps: true }
 );

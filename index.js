@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const dbConfig = require('./config/db');
+const auth=require('./middlewares/auth');
 const {unless} = require('express-unless');
 const middleware = require('./middlewares/error')
 const app = express();

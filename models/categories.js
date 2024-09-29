@@ -2,8 +2,12 @@ const mongoose = require("mongoose");
 const {Schema} = mongoose;
 
 const categoriesSchema = new Schema ({
-    cat_title: {
+    name: {
         type: String ,
+        trim: true
+    },
+    images:{
+        type : String,
         trim: true
     }
 }, { timestamps: true });

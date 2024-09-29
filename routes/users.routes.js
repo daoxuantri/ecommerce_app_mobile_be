@@ -4,7 +4,9 @@ const express = require("express");
 const router = express.Router();
 const User = require("../models/users");
 const OTP = require("../otp/model");
+const auth = require("../middlewares/auth");
 
+//all role
 router.post("/register", userController.register);
 router.post("/login", userController.login);
 router.post("/resetpass", userController.resetpass);

@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 const {Schema} = mongoose;
 
 const brandSchema = new Schema ({
-    brand_title: {
+    name: {
         type: String ,
         trim: true
     }

@@ -6,7 +6,7 @@ const storage = new CloudinaryStorage({
     cloudinary,
     allowedFormats: ['jpg', 'png'],
     params: {
-        folder: 'uploads'
+        folder: 'kltn'
     }
 });
 

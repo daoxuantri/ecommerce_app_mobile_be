@@ -42,7 +42,7 @@ exports.register = async (req, res, next) => {
                 message: "Đăng Ký User Mới Không Thành Công!"
             });
         }
-        return res.status(200).send({success: true, ...newUser.toJSON()});
+        return res.status(200).send({success: true, data: {...newUser.toJSON()}});
     } catch (err) {
         next(err);
     }
@@ -113,5 +113,7 @@ exports.resetpass = async (req, res, next) => {
         return next(err);
     }
 };
+
+
 
 

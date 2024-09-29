@@ -36,10 +36,11 @@ const userSchema = new Schema ({
     images:{
         type: String , 
     },
-    role : {
-        type: Boolean, 
-        default : false,
-    }
+    role: {
+        type: String,
+        enum: ['user', 'admin', 'employee'],  
+        default: 'user', 
+      },
 },{ timestamps: true }
 );
 
