@@ -1,5 +1,9 @@
 const mongoose = require("mongoose");
 const {Schema} = mongoose;
+
+
+
+const orderStatus = ['PROGRESS','COMPLETED',  'CANCELED'];
 const orderSchema = new Schema(
     {
         user: {
@@ -20,8 +24,10 @@ const orderSchema = new Schema(
                 price: { type: Number, require: true }
             },
         ],
-        shipAddress: {
+        orderStatus: {
             type: String,
+            enum: paymentMethods,
+            default: PROGRESS
         },
         total: {
             type: Number,

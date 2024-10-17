@@ -13,7 +13,7 @@ exports.createcart = async (req, res, next) => {
         if (existingCart) {
             return res.status(201).json({
                 success: true,
-                message: "Lỗi"
+                message: "Lỗi!"
             });
         }
         const newCart = new Cart({
@@ -48,9 +48,8 @@ exports.getcartbyuser = async (req, res, next) => {
 exports.addproduct = async (req, res, next) => {
     const { user, product, quantity } = req.body;
     try {
-        console.log(user);
         // B1: Tìm giỏ hàng của người dùng
-        const findCart = await Cart.findOne({ user: req.body.user }).select("-__v -updatedAt -createdAt");
+        const findCart = await Cart.findOne({ user: user }).select("-__v -updatedAt -createdAt");
         console.log(findCart);
         if (!findCart) {
             return res.status(404).json({ success: false, message: "Không tìm thấy giỏ hàng người dùng" });
@@ -72,7 +71,7 @@ exports.addproduct = async (req, res, next) => {
         };
 
         // B3: Kiểm tra số lượng sản phẩm còn trong kho nếu cần (có thể thêm logic kiểm tra kho)
-
+        //(bỏ qua)
         // B4: Kiểm tra sản phẩm đã có trong giỏ hàng chưa
         const existingItemIndex = findCart.productItem.findIndex(item => item.product.equals(product));
 
@@ -106,11 +105,11 @@ exports.removeproduct = async (req, res, next) => {
     const { user, product } = req.body;
     try {
     //B1:
-    // const isItemExist = await Cart.findOne({
-    //     user: user,
-    //     "productItem._id": _id,
-    // })
-    // if (!isItemExist) return res.status(404).json({ success: false, message: "Không tìm thấy sản phẩm trong giỏ hàng của user" });
+    const isItemExist = await Cart.findOne({
+        user: user,
+        "productItem.product": product,
+    })
+    if (!isItemExist) return res.status(404).json({ success: false, message: "Không tìm thấy sản phẩm trong giỏ hàng của user" });
     //B2: 
         const result = await Cart.findOneAndUpdate(
             { user: user },

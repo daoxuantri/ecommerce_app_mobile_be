@@ -29,14 +29,25 @@ mongoose.connect(dbConfig.db).then(
     }
 )
 app.use(express.json());
+
 app.use("/brands", require("./routes/brands.routes"));
-app.use("/carts", require("./routes/carts.routes"));
 app.use("/categories", require("./routes/categories.routes"));
-app.use("/orders", require("./routes/orders.routes"));
-app.use("/products", require("./routes/products.routes"));
-app.use("/reviews", require("./routes/reviews.routes"));
-app.use("/sales", require("./routes/sales.routes"));
+
 app.use("/users", require("./routes/users.routes"));
+app.use("/employees", require("./routes/employees.routes"));
+
+
+app.use("/carts", require("./routes/carts.routes"));
+
+// app.use("/bills", require("./routes/bills.routes"));
+app.use("/orders", require("./routes/orders.routes"));
+
+
+app.use("/products", require("./routes/products.routes"));
+app.use("/reviews", require("./routes/reviews.routes")); 
+
+
+
 // app.use(
 //     (req,res,next) =>{
 //         auth
