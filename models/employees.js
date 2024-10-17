@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const {Schema} = mongoose;
 
-const userSchema = new Schema ({
+const employeeSchema = new Schema ({
     username:{
         type: String,
         trim : true ,
@@ -27,20 +27,17 @@ const userSchema = new Schema ({
     images:{
         type: String , 
     },
-    bonuspoint:{
-        type: Number,
-        default: 0
-    },
-    status: {
-        type : Boolean, 
-        default : true
-    }
+    role: {
+        type: String,
+        enum: ['admin', 'employee'],  
+        default: 'employee', 
+      },
 },{ timestamps: true }
 );
 
 
 //return Json
-userSchema.set("toJSON",{
+employeeSchema.set("toJSON",{
     transform: (document , returnedObject)=>{
         returnedObject.id = returnedObject._id.toString();
         delete returnedObject._id;
@@ -55,5 +52,5 @@ userSchema.set("toJSON",{
 
     },
 });
-const User = mongoose.model("User",userSchema);
-module.exports= User    
+const Employee = mongoose.model("Employee",employeeSchema);
+module.exports= Employee    

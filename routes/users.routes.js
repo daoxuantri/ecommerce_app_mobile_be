@@ -59,6 +59,12 @@ router.post("/email_verification/:email", async (req, res) => {
                 message: 'Tài khoản không tồn tại'}
             );
         }
+        if(!checkEmail.status){
+            return res.status(401).send(
+                {success: false,
+                message: 'Tài khoản của bạn đã bị khóa , vui lòng liên hệ CSKH'}
+            );
+        }
         if (!email) throw Error("An email is required!");
 
         const createdEmailVerificationOTP = await sendVerificationOTPEmail(email);
