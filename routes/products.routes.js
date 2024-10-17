@@ -6,6 +6,7 @@ const router = express.Router();
 
 //all role
 router.post("/createproduct",uploadCloud.array('images'),  productController.createproduct);
+router.post("/updateproduct",  productController.updateproduct);
 router.get("/getallproduct",  productController.getallproduct);
 
 

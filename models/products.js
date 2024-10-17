@@ -38,7 +38,7 @@ const productSchema = new Schema ({
     isStock: {
         type : Boolean,
         default : true
-    }
+    },
 
 },{ timestamps: true }
 );

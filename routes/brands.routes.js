@@ -3,6 +3,6 @@ const express = require("express");
 const router = express.Router();
 
 router.post("/createbrand", brandController.createbrand);
-// router.post("/login", brandController.login);
+router.post("/deletebrand", brandController.deletebrand);
 
 module.exports = router;    

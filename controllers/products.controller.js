@@ -1,7 +1,7 @@
 const Product = require("../models/products");
 
 
-//vua update & create
+
 exports.createproduct = async (req, res, next) => {
     try {
         // Lấy link ảnh từ Cloudinary (đã upload trước đó)
@@ -43,6 +43,32 @@ exports.createproduct = async (req, res, next) => {
             message: "Thêm sản phẩm thành công",
             data: saveProduct
         });
+    } catch (err) {
+        next(err);
+    }
+};
+
+exports.updateproduct = async (req, res, next) => {
+    try {
+        // Lấy link ảnh từ Cloudinary (đã upload trước đó)
+        // req.body.images = req.files.map((file) => file.path);
+
+       
+        const existProduct = await Product.findOne({ name: req.body.name });
+        if (existProduct) {
+            const updatedProduct = await Product.findByIdAndUpdate(
+                existProduct._id,
+                { 
+                    brand: req.body.brand  
+                },
+                { new: true }
+            );
+            return res.status(200).json({
+                success: true,
+                message: "Cập nhật danh mục thành công",
+                data: updatedProduct
+            });
+        }
     } catch (err) {
         next(err);
     }

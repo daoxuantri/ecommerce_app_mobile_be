@@ -1,24 +1,20 @@
 const bcryptjs =require("bcryptjs");
 const User = require("../models/users");
-const Brand = require("../models/brands");
 const Cart = require("../models/carts");
-const Category = require("../models/categories");
-const Order = require("../models/orders");
-const Product = require("../models/products");
-const Review = require("../models/reviews");
-const Sale = require("../models/sales"); 
 
 const auth = require("../middlewares/auth");
+
+
 
 
 exports.register = async (req, res, next) => {
     try {
         const {username , email, password, contact } = req.body;
 
+        const images = "https://res.cloudinary.com/dpczlxs5i/image/upload/v1727797764/kltn/nvhplrsb52daynbjfcnv.png";
         const salt = bcryptjs.genSaltSync(10);
 
         req.body.password = bcryptjs.hashSync(password, salt);
-
         
         const emails = await User.findOne({ email });
 
@@ -34,6 +30,7 @@ exports.register = async (req, res, next) => {
             password: req.body.password,
             email: email,
             contact: contact,
+            images: images
         });
         const saveUser = await newUser.save();
         if (!saveUser) {
@@ -42,6 +39,19 @@ exports.register = async (req, res, next) => {
                 message: "Đăng Ký User Mới Không Thành Công!"
             });
         }
+
+        //create cart
+        const findUser = await User.findOne({email : email });
+        const createNewCart = new Cart({user : findUser._id});
+        const createCart = await newCart.save();
+
+        //create coupon 
+        const newCoupoon = new Coupon({user: findUser._id});
+        const createCoupon = await newCoupon.save();
+        
+
+
+
         return res.status(200).send({success: true, data: {...newUser.toJSON()}});
     } catch (err) {
         next(err);
