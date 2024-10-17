@@ -27,6 +27,14 @@ const userSchema = new Schema ({
     images:{
         type: String , 
     },
+    bonuspoint:{
+        type: Number,
+        default: 0
+    },
+    status: {
+        type : Boolean, 
+        default : true
+    }
 },{ timestamps: true }
 );
 
