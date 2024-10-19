@@ -4,12 +4,15 @@ const auth = require("../middlewares/auth");
 const express = require("express");
 const router = express.Router();
 
-//all role
+//(role: admin , employee)
 router.post("/createproduct",uploadCloud.array('images'),  productController.createproduct);
-router.post("/updateproduct",  productController.updateproduct);
+router.post("/updateproduct",uploadCloud.array('images'), productController.updateproduct);
+
+
+//all role
 router.get("/getallproduct",  productController.getallproduct);
 
 
 // //admin
-// router.delete("/deleteproduct/:id",auth.verifyTokenAndAdmin, productController.deleteproduct);
+router.delete("/deleteproduct/:id",auth.verifyTokenAndAdmin, productController.deleteproduct);
 module.exports = router;    
