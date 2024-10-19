@@ -1,8 +1,17 @@
 const brandController = require("../controllers/brands.controller");
 const express = require("express");
 const router = express.Router();
+const uploadCloud = require("../middlewares/multer");
+const auth = require("../middlewares/auth");
 
-router.post("/createbrand", brandController.createbrand);
-router.post("/deletebrand", brandController.deletebrand);
+
+//role (admin , employee)
+router.post("/createbrand", uploadCloud.array('images'), brandController.createbrand);
+ 
+router.get("/getallbrand",  brandController.getallbrand);
+
+
+//(Xem bo sung => ko can thiet thi bo)
+router.post("/deletebrand/:id", brandController.deletebrand);
 
 module.exports = router;    

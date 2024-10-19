@@ -5,6 +5,10 @@ const brandSchema = new Schema ({
     name: {
         type: String ,
         trim: true
+    },
+    images:{
+        type : String,
+        trim: true
     }
 }, { timestamps: true });
 
