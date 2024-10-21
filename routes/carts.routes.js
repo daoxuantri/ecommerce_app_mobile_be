@@ -9,7 +9,7 @@ const router = express.Router();
 router.post("/createcart", cartController.createcart); 
 
 //role
-router.post("/getcartbyuser", cartController.getcartbyuser);
+router.get("/getcartbyuser/:id", cartController.getcartbyuser);
 router.post("/addproduct", cartController.addproduct); 
 router.post("/removeproduct", cartController.removeproduct);
 

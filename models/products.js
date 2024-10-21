@@ -12,10 +12,12 @@ const productSchema = new Schema ({
     category: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Category",
+        default : null
     },
     brand: {
         type : mongoose.Schema.Types.ObjectId,
         ref: "Brand",
+        default: null
     },
     description: {
         type : String

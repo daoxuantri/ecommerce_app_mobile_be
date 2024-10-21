@@ -31,7 +31,7 @@ exports.createcart = async (req, res, next) => {
 
 //lay tat ca san pham gio hang cho users
 exports.getcartbyuser = async (req, res, next) => {
-    const userId = req.body.user;
+    const userId = req.params.id;
     try {
         const existingCart = await Cart.findOne({ user: userId }).select("-__v -updatedAt -createdAt");
         return res.status(200).json({
@@ -50,7 +50,7 @@ exports.addproduct = async (req, res, next) => {
     try {
         // B1: Tìm giỏ hàng của người dùng
         const findCart = await Cart.findOne({ user: user }).select("-__v -updatedAt -createdAt");
-        console.log(findCart);
+         
         if (!findCart) {
             return res.status(404).json({ success: false, message: "Không tìm thấy giỏ hàng người dùng" });
         }

@@ -4,15 +4,17 @@ const auth = require("../middlewares/auth");
 const Product = require("../models/products");
 
 
-
+//done
 exports.createbrand = async (req, res, next) => {
     try {
+        req.body.images = req.files[0].path;
         const existBrand = await Brand.findOne({ name: req.body.name });
         if (existBrand) {
             const updateBrand = await Brand.findByIdAndUpdate(
                 existBrand._id,
                 {
                     name: req.body.name,  
+                    images: req.body.images   
                 },
                 { new: true }
             );
@@ -40,19 +42,41 @@ exports.createbrand = async (req, res, next) => {
 };
 
 
+exports.getallbrand = async (req, res, next) => {
+    try {
+        
+        const listBrand = await Brand.find().select('-__v -createdAt -updatedAt');
+        
+        return res.status(200).send({
+            success: true,
+            message: "Thành công",
+            data: listBrand,
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
+
+// xem bo sung => ko can thiet thi bo
 exports.deletebrand = async (req, res, next) => {
     try {
-        const {brandId} = req.body; 
-        const brand = await Brand.findById(brandId);
-        if (brand) {
-            const brand = await Brand.findByIdAndDelete(brandId);
+        const brandId = req.params.id; 
+        //Tim kiem brand
+        const findbrand = await Brand.findById(brandId);
+        if (!findbrand) {
+            return res.status(404).send({
+                success: false,
+                message: 'Brand không tồn tại!'}); 
+        }
 
-    }
-        // Cập nhật tất cả các sản phẩm có brand là ObjectId của brand bị xóa
+        //Xoa brand
+        const brand = await Brand.findByIdAndDelete(brandId);
+        // Update Product(Brand) => set null
         await Product.updateMany({ brand: brandId }, { $set: { brand: null } });
         return res.status(200).json({
             success: true,
-            message: "Xóa nhãn hàng thành công"
+            message: "Xóa Brand thành công"
         });
         
     } catch (error) {

@@ -32,6 +32,7 @@ app.use(express.json());
 
 app.use("/brands", require("./routes/brands.routes"));
 app.use("/categories", require("./routes/categories.routes"));
+app.use("/banners", require("./routes/banners.routes"));
 
 app.use("/users", require("./routes/users.routes"));
 app.use("/employees", require("./routes/employees.routes"));

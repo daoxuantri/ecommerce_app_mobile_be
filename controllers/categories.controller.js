@@ -73,14 +73,11 @@ exports.deletecategory = async (req, res, next) => {
                 success: false,
                 message: 'Category không tồn tại!'});  
         }
-        //Xóa category
-        const deletecategory = await Category.findByIdAndDelete(categoryId);
         //Update lại những sản phẩm có category = > set null ,
         await Product.updateMany(
             { category: categoryId },  
             { $set: { category: null } }  
-        );
-        
+        ); 
         // Sau khi cập nhật, tiến hành xóa category
         await Category.findByIdAndDelete(categoryId);
 

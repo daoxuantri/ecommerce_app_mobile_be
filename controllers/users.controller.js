@@ -74,7 +74,7 @@ exports.login = async (req, res, next) => {
         }
         //kiem tra mat khau
         const isCorrectPassword = bcryptjs.compareSync(req.body.password, resultUser.password);
-        console.log(isCorrectPassword)
+         
         if (!isCorrectPassword) return res.status(201).send({
             success: false,
             message: "Sai mật khẩu, vui lòng nhập lại"
