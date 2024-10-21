@@ -1,4 +1,5 @@
 const Category = require("../models/categories");
+const Product = require("../models/products");
 const cloudinary = require('cloudinary').v2;
 const mongoose = require("mongoose");
 
@@ -61,25 +62,31 @@ exports.getallcategories = async (req, res, next) => {
 };
 
 
+//delete category => delete product     (xem bo sung = > ko can thiet thi bo)
 exports.deletecategory = async (req, res, next) => {
     try {
-        const Categoryid = req.params.id;
-        const categoryInfo = await Category.findById(Categoryid);
-        if (!categoryInfo) {
-            return next(createError(404, 'Sản phẩm cần xóa không tồn tại!'));
-        
-        }
+        const categoryId = req.params.id;
+        const categoryInfo = await Category.findById(categoryId);
 
-        // await Promise.all(productInfo.reviews.map((review) => Review.findByIdAndDelete(review)));
-        // if (productInfo.reviews && productInfo.reviews.length > 0) {
-        //     await Promise.all(productInfo.reviews.map(async (review) => {
-        //         await Review.findByIdAndDelete(review);
-        //     }));
-        // }
-        const deletecategory = await Category.findByIdAndDelete(Categoryid);
+        if (!categoryInfo) { 
+            return res.status(404).send({
+                success: false,
+                message: 'Category không tồn tại!'});  
+        }
+        //Xóa category
+        const deletecategory = await Category.findByIdAndDelete(categoryId);
+        //Update lại những sản phẩm có category = > set null ,
+        await Product.updateMany(
+            { category: categoryId },  
+            { $set: { category: null } }  
+        );
+        
+        // Sau khi cập nhật, tiến hành xóa category
+        await Category.findByIdAndDelete(categoryId);
+
          return res.status(200).send({
             success: true,
-            message: 'Sản phẩm đã được xóa thành công!'});
+            message: 'Xóa category thành công!'});
        
     } catch (err) {
         next(err);

@@ -6,7 +6,6 @@ const { hashData, verifyHashedData } = require("../util/hashData");
 const {AUTH_EMAIL} = process.env;
 
 
-
 const verifyOTP = async ({email , otp}) =>{
     try{
         if(!(email && otp)){

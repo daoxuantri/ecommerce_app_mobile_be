@@ -27,11 +27,6 @@ const employeeSchema = new Schema ({
     images:{
         type: String , 
     },
-    role: {
-        type: String,
-        enum: ['admin', 'employee'],  
-        default: 'employee', 
-      },
 },{ timestamps: true }
 );
 
