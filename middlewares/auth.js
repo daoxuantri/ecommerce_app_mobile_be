@@ -24,6 +24,19 @@ function generateAccessToken(id){
     });
 }
 
+async function authenticateLoginToken(accessToken) {
+  try {
+    const user = await jwt.verify(accessToken, process.env.JWT);
+    const resultUser = await User.findOne({ _id: user?.data });
+    if (!resultUser) {
+      return false; 
+    } 
+    return {authenticated : true , user: resultUser};
+  } catch (err) {
+    return false;
+  }
+}
+
 function generateRefreshToken(id){
   return jwt.sign({data: id}, process.env.JWT,{
       expiresIn: "24h"
@@ -57,5 +70,6 @@ module.exports={
     authenticateToken,
     generateAccessToken,
     verifyTokenAndAdmin,
-    generateRefreshToken
+    generateRefreshToken,
+    authenticateLoginToken
 };

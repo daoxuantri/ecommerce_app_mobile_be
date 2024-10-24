@@ -81,7 +81,7 @@ exports.login = async (req, res, next) => {
         });
 
         if (isCorrectPassword && resultUser){
-            const access_token = auth.generateAccessToken(resultUser._id); 
+            const access_token = await auth.generateAccessToken(resultUser._id); 
             return res.status(200).json({ 
                 success: true, 
                 message: "Đăng nhập thành công",
@@ -96,6 +96,38 @@ exports.login = async (req, res, next) => {
     } catch (err) {
         return next(err);
     }
+};
+
+
+exports.logintoken = async (req, res, next) => {
+    try{
+        const token = req.headers.token
+        if(!token){
+            return res.status(403).json({ success: false , message: "You're not authenticated" });
+        }  
+        const accessToken = token.split(" ")[1];
+        //xac thuc nguoi dung -> login (thong qua token)
+        const {authenticated, user } =await auth.authenticateLoginToken(accessToken); 
+        if (authenticated){
+            const access_token = await auth.generateAccessToken(user._id); 
+            return res.status(200).json({
+                success: true,
+                message : "Xác thực thành công",
+                data: {
+                    ...user.toJSON(),
+                    access_token: access_token,
+                },
+            })
+        }else{
+            return res.status(401).json({
+                success: false,
+                message : "Token hết hạn , đăng nhập lại"
+            })
+        }
+    }catch(err){
+        next(err)
+    }
+    
 };
 
 exports.resetpass = async (req, res, next) => {
