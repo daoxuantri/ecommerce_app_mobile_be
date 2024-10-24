@@ -8,6 +8,7 @@ const auth = require("../middlewares/auth");
 
 //all role
 router.post("/register", userController.register);
+router.post("/logintoken", userController.logintoken);
 router.post("/login", userController.login);
 router.post("/resetpass", userController.resetpass);
 
@@ -111,12 +112,5 @@ router.post("/verify1", async (req,res) =>{
         res.status(400).json({success: false, message: e.message});
     }
 });
-
-
-
-
-
-
-
 
 module.exports = router;
