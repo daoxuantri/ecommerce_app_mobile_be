@@ -2,7 +2,8 @@ const bcryptjs =require("bcryptjs");
 const Brand = require("../models/brands");
 const auth = require("../middlewares/auth");
 const Product = require("../models/products");
-
+const cloudinary = require('cloudinary').v2;
+const mongoose = require("mongoose");
 
 //done
 exports.createbrand = async (req, res, next) => {
@@ -27,6 +28,7 @@ exports.createbrand = async (req, res, next) => {
         
         const newBrand = new Brand({
             name: req.body.name,  
+            images: req.body.images 
         });
 
         const saveBrand = await newBrand.save();
