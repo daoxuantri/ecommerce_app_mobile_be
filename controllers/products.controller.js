@@ -1,7 +1,12 @@
 const Product = require("../models/products");
+const Brand = require("../models/brands");
+const Category = require("../models/categories");
 const cloudinary = require('cloudinary').v2;
 const mongoose = require("mongoose"); 
+const {allSort, fillInfoListProducts} = require("../handlecontrollers/products.handle");
 
+
+const PAGE_SIZE = 10;
 
 exports.createproduct = async (req, res, next) => {
     try {
@@ -80,23 +85,37 @@ exports.updateproduct = async (req, res, next) => {
     }
 };
 
-
-
+//get theo page or tất cả sản phẩm
 exports.getallproduct = async (req, res, next) => {
     try {
-        const listProduct = await Product.find().select('-__v -createdAt -updatedAt');
+        var page = req.query.page;
+        if (page){
+            page = parseInt(page);
+            var quantity = (page -1) * PAGE_SIZE ;
+
+            const findlist = await Product.find({}).skip(quantity).limit(PAGE_SIZE).select('-__v -createdAt -updatedAt').then(
+                data=> {
+                    return res.status(200).send({
+                        success: true,
+                        message: "Thành công",
+                        data: data
+                    })
+                }
+            )
+        }else{
+            const listProduct = await Product.find().select('-__v -createdAt -updatedAt');
         
         return res.status(200).send({
             success: true,
             message: "Thành công",
             data: listProduct,
         });
+        }
+        
     } catch (err) {
         next(err);
     }
 };
-
-
 
 //role (admin)
 exports.deleteproduct = async (req, res, next) => {
@@ -120,5 +139,82 @@ exports.deleteproduct = async (req, res, next) => {
     }
 };
 
+exports.sort = async (req, res, next) => {
+    try {
 
+        //truyen vao page = page number trang hien tai
+        const {keyword, brand, sort, page = 1}= req.body;
+        //timkiem theo tu khoa 
+        const findProduct = await Product.find({
+            $or:[
+                {name:{ $regex: keyword, $options: 'i' } },
+                { desc: { $regex: keyword, $options: 'i' } },
+                { brand: { $in: await Brand.find({ name: { $regex: keyword, $options: 'i' } }) } },
+                { category: { $in: await Category.find({ name: { $regex: keyword, $options: 'i' } }) } }
+            ],
+            status: true
+        }).select("_id price rating brand");
+
+        console.log(findProduct);
+
+        
+        //B2:
+        const final = await allSort({findProduct, brand, sort}) ;
+        
+        //B3:
+        //
+        const pages = Math.ceil(final.length / PAGE_SIZE);
+        const semiFinals = final.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+        
+        const finalsemi = await fillInfoListProducts(semiFinals);
+
+        return res.status(200).send({
+            success: true , 
+            message:"Thành công",
+            data: finalsemi,
+            pagination: {
+                currentPage: page,
+                totalPages: pages,
+                totalItems: final.length
+            }
+        })
+        
+        // //B2 : sap xep -> final
+        // let final = [];
+        // let semiFinal = findProduct;
+        // if (brand) semiFinal = listProducts.filter(item => item.brand === brand);
+
+        // if (sort === 'pASC') final.sort((a, b) => a.price - b.price);
+        // if (sort === 'pDESC') final.sort((a, b) => b.price - a.price);
+        // if (sort === 'rASC') final.sort((a, b) => a.rating - b.rating);
+        // if (sort === 'rDESC') final.sort((a, b) => b.rating - a.rating);
+
+        // //b3
+        // const pages = Math.ceil(final.length / PAGE_SIZE);
+        // const semiFinals = final.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+        // const result = [];
+        // for (const product of semiFinals) {
+        //     const found = await this.fillInfoOneProduct(product._id, userId);
+        //     result.push(found);
+        // } 
+   
+    } catch (err) {
+        next(err);
+    }
+};
+
+
+// async fillInfoOneProduct(product._id, userId) {
+//     const found = await this.productModel.findById(proId)
+//         .populate({ path: 'category', select: 'name' })
+//         .select("-__v -createdAt -updatedAt")
+//         .lean();
+//     const urlImg = await this.variantService.getOneImageOfProduct(proId);
+//     const avaiQuantity = await this.variantService.getAvailableQuantityOfProduct(proId);
+//     const totalReview = await this.commentService.getTotalReviewOfProduct(proId);
+//     let isFavorite = false;
+//     if (userId) isFavorite = await this.favoriteService.checkProductIsFavorite(userId, proId);
+
+//     return { ...found, image: urlImg, available: avaiQuantity, isFavorite, totalReview };
+// }
 
