@@ -61,6 +61,27 @@ exports.getallcategories = async (req, res, next) => {
     }
 };
 
+exports.getcatebyid = async (req, res, next) => {
+    try {
+        const _id = req.params.id;
+        const foundId = await Category.findById(_id);
+
+        if(!foundId){
+            return res.status(404).send({
+                success: false,
+                message: "Không tìm thấy Category"
+            })
+        }
+        return res.status(201).send({
+            success: true,
+            message: "Thành công",
+            data: foundId
+        })
+    } catch (err) {
+        return next(err);
+    }
+};
+
 
 //delete category => delete product     (xem bo sung = > ko can thiet thi bo)
 exports.deletecategory = async (req, res, next) => {
