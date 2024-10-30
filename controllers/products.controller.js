@@ -203,18 +203,23 @@ exports.sort = async (req, res, next) => {
     }
 };
 
+exports.getproductbyid = async (req, res, next) => {
+    try {
+        const _id = req.params.id;
+        const foundId = await Product.findById(_id);
 
-// async fillInfoOneProduct(product._id, userId) {
-//     const found = await this.productModel.findById(proId)
-//         .populate({ path: 'category', select: 'name' })
-//         .select("-__v -createdAt -updatedAt")
-//         .lean();
-//     const urlImg = await this.variantService.getOneImageOfProduct(proId);
-//     const avaiQuantity = await this.variantService.getAvailableQuantityOfProduct(proId);
-//     const totalReview = await this.commentService.getTotalReviewOfProduct(proId);
-//     let isFavorite = false;
-//     if (userId) isFavorite = await this.favoriteService.checkProductIsFavorite(userId, proId);
-
-//     return { ...found, image: urlImg, available: avaiQuantity, isFavorite, totalReview };
-// }
-
+        if(!foundId){
+            return res.status(404).send({
+                success: false,
+                message: "Không tìm thấy sp"
+            })
+        }
+        return res.status(201).send({
+            success: true,
+            message: "Thành công",
+            data: foundId
+        })
+    } catch (err) {
+        return next(err);
+    }
+};

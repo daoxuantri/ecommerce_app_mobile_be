@@ -155,6 +155,29 @@ exports.resetpass = async (req, res, next) => {
     }
 };
 
+exports.getuserbyid = async (req, res, next) => {
+    try {
+        const _id = req.params.id;
+        const foundId = await User.findById(_id);
+
+        if(!foundId){
+            return res.status(404).send({
+                success: false,
+                message: "Không tìm thấy user"
+            })
+        }
+        return res.status(201).send({
+            success: true,
+            message: "Thành công",
+            data: foundId
+        })
+    } catch (err) {
+        return next(err);
+    }
+};
+
+
+
 
 
 

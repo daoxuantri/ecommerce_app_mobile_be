@@ -59,6 +59,27 @@ exports.getallbrand = async (req, res, next) => {
     }
 };
 
+exports.getbrandbyid = async (req, res, next) => {
+    try {
+        const _id = req.params.id;
+        const foundId = await Brand.findById(_id);
+
+        if(!foundId){
+            return res.status(404).send({
+                success: false,
+                message: "Không tìm thấy Brand"
+            })
+        }
+        return res.status(201).send({
+            success: true,
+            message: "Thành công",
+            data: foundId
+        })
+    } catch (err) {
+        return next(err);
+    }
+};
+
 
 // xem bo sung => ko can thiet thi bo
 exports.deletebrand = async (req, res, next) => {

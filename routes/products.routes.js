@@ -9,13 +9,9 @@ router.post("/createproduct",uploadCloud.array('images'),  productController.cre
 router.post("/updateproduct",uploadCloud.array('images'), productController.updateproduct);
 //sort and filter
 router.post("/sort", productController.sort);
-
-
 //all role
 router.get("/getallproduct",  productController.getallproduct);
-
-
-
+router.get("/getproductbyid/:id", productController.getproductbyid);
 // //admin
 router.delete("/deleteproduct/:id",auth.verifyTokenAndAdmin, productController.deleteproduct);
 module.exports = router;    

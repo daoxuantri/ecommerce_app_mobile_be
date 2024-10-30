@@ -108,5 +108,26 @@ exports.resetpass = async (req, res, next) => {
     }
 };
 
+exports.getempbyid = async (req, res, next) => {
+    try {
+        const _id = req.params.id;
+        const foundId = await Employee.findById(_id);
+
+        if(!foundId){
+            return res.status(404).send({
+                success: false,
+                message: "Không tìm thấy Employee"
+            })
+        }
+        return res.status(201).send({
+            success: true,
+            message: "Thành công",
+            data: foundId
+        })
+    } catch (err) {
+        return next(err);
+    }
+};
+
 
 

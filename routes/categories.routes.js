@@ -7,6 +7,7 @@ const auth = require("../middlewares/auth");
 
 //all role
 router.get("/getallcategories",  categoryController.getallcategories);
+router.get("/getcatebyid/:id",  categoryController.getcatebyid);
 //admin , employee
 router.post("/createcategories",uploadCloud.array('images'),  categoryController.createcategories);
 //admin

@@ -14,7 +14,7 @@ router.post("/updatebanner",uploadCloud.array('images'),  bannerController.updat
 
 //all role
 router.get("/getallbanner",  bannerController.getallbanner);
-
+router.get("/getbannerbyid",  bannerController.getbannerbyid);
 
 // //admin (sua lai role.verifyCation)
 router.delete("/deletebanner/:id",auth.verifyTokenAndAdmin, bannerController.deletebanner);

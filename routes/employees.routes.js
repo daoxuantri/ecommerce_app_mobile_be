@@ -17,8 +17,8 @@ router.post("/login", employeeController.login);
 
 
 //resetpass-employee
-router.post("/resetpass", employeeController.resetpass);
-
+router.post("/getempbyid/:id", employeeController.getempbyid);
+router.get("/resetpass", employeeController.resetpass);
 //send email
 router.post("/email_verification/:email", async (req, res) => {
     try {
