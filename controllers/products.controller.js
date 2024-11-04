@@ -141,65 +141,36 @@ exports.deleteproduct = async (req, res, next) => {
 
 exports.sort = async (req, res, next) => {
     try {
+        // Lấy tham số từ query
+        const { page = 1, limit = 10, sort, order = 'asc', name } = req.query;
 
-        //truyen vao page = page number trang hien tai
-        const {keyword, brand, sort, page = 1}= req.body;
-        //timkiem theo tu khoa 
-        const findProduct = await Product.find({
-            $or:[
-                {name:{ $regex: keyword, $options: 'i' } },
-                { desc: { $regex: keyword, $options: 'i' } },
-                { brand: { $in: await Brand.find({ name: { $regex: keyword, $options: 'i' } }) } },
-                { category: { $in: await Category.find({ name: { $regex: keyword, $options: 'i' } }) } }
-            ],
-            status: true
-        }).select("_id price rating brand");
+        // Tạo điều kiện lọc theo tên nếu có, nếu không thì để rỗng
+        const query = name ? { name: { $regex: name, $options: 'i' } } : {};
 
-        console.log(findProduct);
+        // Tạo chuỗi sắp xếp theo thời gian mặc định
+        // Nếu có tham số sort thì thêm sắp xếp theo trường đó với thứ tự `order`
+        let sortCriteria = { createdAt: order === 'asc' ? -1 : 1 }; // Sắp xếp theo thời gian mặc định
+        if (sort) {
+            sortCriteria = { ...sortCriteria, [sort]: order === 'asc' ? -1 : 1 };//Mặc định order = asc thì tăng dần còn không giảm dầm chảng hạng order = desc 
+        }
 
-        
-        //B2:
-        const final = await allSort({findProduct, brand, sort}) ;
-        
-        //B3:
-        //
-        const pages = Math.ceil(final.length / PAGE_SIZE);
-        const semiFinals = final.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-        
-        const finalsemi = await fillInfoListProducts(semiFinals);
+        // Lấy dữ liệu, phân trang và sắp xếp
+        const products = await Product.find(query)
+            .sort(sortCriteria) // Sắp xếp theo thời gian và trường được truyền vào nếu có
+            .limit(parseInt(limit)) // Giới hạn số bản ghi
+            .skip((parseInt(page) - 1) * parseInt(limit)); // Bỏ qua số bản ghi dựa trên trang hiện tại
 
-        return res.status(200).send({
-            success: true , 
-            message:"Thành công",
-            data: finalsemi,
-            pagination: {
-                currentPage: page,
-                totalPages: pages,
-                totalItems: final.length
-            }
-        })
-        
-        // //B2 : sap xep -> final
-        // let final = [];
-        // let semiFinal = findProduct;
-        // if (brand) semiFinal = listProducts.filter(item => item.brand === brand);
+        // Tính tổng số sản phẩm để tính tổng số trang
+        const count = await Product.countDocuments(query);
 
-        // if (sort === 'pASC') final.sort((a, b) => a.price - b.price);
-        // if (sort === 'pDESC') final.sort((a, b) => b.price - a.price);
-        // if (sort === 'rASC') final.sort((a, b) => a.rating - b.rating);
-        // if (sort === 'rDESC') final.sort((a, b) => b.rating - a.rating);
-
-        // //b3
-        // const pages = Math.ceil(final.length / PAGE_SIZE);
-        // const semiFinals = final.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-        // const result = [];
-        // for (const product of semiFinals) {
-        //     const found = await this.fillInfoOneProduct(product._id, userId);
-        //     result.push(found);
-        // } 
-   
-    } catch (err) {
-        next(err);
+        res.json({
+            products,
+            totalItems: count,
+            totalPages: Math.ceil(count / limit),
+            currentPage: parseInt(page),
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
     }
 };
 
