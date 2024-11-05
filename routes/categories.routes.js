@@ -12,4 +12,6 @@ router.get("/getcatebyid/:id",  categoryController.getcatebyid);
 router.post("/createcategories",uploadCloud.array('images'),  categoryController.createcategories);
 //admin
 router.delete("/deletecategory/:id",auth.verifyTokenAndAdmin, categoryController.deletecategory);
+//get all product (category)
+router.get("/getallproduct/:id",  categoryController.getallproduct);
 module.exports = router;    
