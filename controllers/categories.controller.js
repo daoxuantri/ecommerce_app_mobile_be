@@ -110,3 +110,29 @@ exports.deletecategory = async (req, res, next) => {
         next(err);
     }
 };
+
+
+//lay sp theo danh muc
+exports.getallproduct = async (req, res, next) => {
+    try {
+        const categoryId = req.params.id;
+        const listProduct = await Product.find({category: categoryId});
+        if (!listProduct) { 
+            return res.status(404).send({
+                success: false,
+                message: 'Category không tồn tại!'});  
+        }
+
+
+         return res.status(200).send({
+            success: true,
+            message: 'Danh sách sản phẩm',
+        });
+       
+    } catch (err) {
+        next(err);
+    }
+};
+
+
+
