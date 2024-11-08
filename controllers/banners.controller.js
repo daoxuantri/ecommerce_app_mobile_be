@@ -127,3 +127,26 @@ exports.deletebanner = async (req, res, next) => {
         next(err);
     }
 };
+
+
+exports.home = async (req, res, next) => {
+    try {
+        const bannerId = req.params.id;
+        const bannerInfo = await Banner.findById(bannerId);
+
+        if (!bannerInfo) { 
+            return res.status(404).send({
+                success: false,
+                message: 'Banner không tồn tại!'});  
+        }
+        //Xóa banner
+        const deletebanner = await Banner.findByIdAndDelete(bannerId);
+
+         return res.status(200).send({
+            success: true,
+            message: 'Xóa banner thành công!'});
+       
+    } catch (err) {
+        next(err);
+    }
+};
