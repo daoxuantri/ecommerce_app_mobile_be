@@ -93,7 +93,7 @@ exports.getallproduct = async (req, res, next) => {
             page = parseInt(page);
             var quantity = (page -1) * PAGE_SIZE ;
 
-            const findlist = await Product.find({}).skip(quantity).limit(PAGE_SIZE).select('-__v -createdAt -updatedAt').then(
+            const findlist = await Product.find({status : true}).skip(quantity).limit(PAGE_SIZE).select('-__v -createdAt -updatedAt').then(
                 data=> {
                     return res.status(200).send({
                         success: true,
@@ -117,7 +117,7 @@ exports.getallproduct = async (req, res, next) => {
     }
 };
 
-//thiếu rating
+//done
 exports.sort = async (req, res, next) => {
     try {
         const { page = 1, limit = 10, sort, order = 'asc', name, brand, rating } = req.query;
@@ -161,29 +161,29 @@ exports.sort = async (req, res, next) => {
     }
 };
 
-// getall (mac dinh) 
-exports.getall = async (req, res, next) => {
-    try {
-        const keyphone = '6710f1feec59de47203e24b4', keylaptop = '6728ae34103ff016b31ff2be';
-        const findAllPhone = await Product.find({ category: keyphone })
-            .sort({ sold: -1 })
-            .limit(16);
-        const findAllLaptop = await Product.find({ category: keylaptop })
-            .sort({ sold: -1 })
-            .limit(16);
+// // getall (mac dinh) 
+// exports.getall = async (req, res, next) => {
+//     try {
+//         const keyphone = '6710f1feec59de47203e24b4', keylaptop = '6728ae34103ff016b31ff2be';
+//         const findAllPhone = await Product.find({ category: keyphone })
+//             .sort({ sold: -1 })
+//             .limit(16);
+//         const findAllLaptop = await Product.find({ category: keylaptop })
+//             .sort({ sold: -1 })
+//             .limit(16);
 
-        return res.status(200).send({
-            success: true,
-            message: "Thành công",
-            data: {
-                mobilephone: findAllPhone,
-                laptop: findAllLaptop
-            }
-        });
-    } catch (err) {
-        next(err);
-    }
-};
+//         return res.status(200).send({
+//             success: true,
+//             message: "Thành công",
+//             data: {
+//                 mobilephone: findAllPhone,
+//                 laptop: findAllLaptop
+//             }
+//         });
+//     } catch (err) {
+//         next(err);
+//     }
+// };
 
 
 
@@ -218,8 +218,7 @@ exports.deleteproduct = async (req, res, next) => {
 exports.getproductbyid = async (req, res, next) => {
     try {
         const _id = req.params.id;
-        const foundId = await Product.findById(_id);
-
+        const foundId = await Product.find({_id : _id, status : true});
         if(!foundId){
             return res.status(404).send({
                 success: false,
@@ -235,6 +234,36 @@ exports.getproductbyid = async (req, res, next) => {
         return next(err);
     }
 };
+
+exports.getall = async (req, res, next) => {
+    try {
+        // Lấy tất cả các category
+        const categories = await Category.find();
+
+        // Duyệt qua từng category
+        const categoriesWithProducts = await Promise.all(categories.map(async (category) => {
+            // Lấy tất cả sản phẩm theo category
+            const products = await Product.find({ category: category._id , status : true}).populate('brand');
+
+            // Lấy tất cả brand có sản phẩm thuộc category này
+            const brands = await Brand.find({
+                _id: { $in: products.map(product => product.brand) }
+            });
+
+            return {
+                category,
+                products,
+                brands
+            };
+        }));
+
+        return res.json(categoriesWithProducts);
+    } catch (err) {
+        next (err)
+    }
+};
+
+
 // exports.sort = async (req, res, next) => {
 //     try {
 
@@ -298,3 +327,4 @@ exports.getproductbyid = async (req, res, next) => {
 //         next(err);
 //     }
 // };
+

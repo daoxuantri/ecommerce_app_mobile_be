@@ -5,16 +5,19 @@ const express = require("express");
 const router = express.Router();
 
 //(role: admin , employee)
-router.post("/createproduct",uploadCloud.array('images'),  productController.createproduct);
-router.post("/updateproduct",uploadCloud.array('images'), productController.updateproduct);
+router.post("/create",uploadCloud.array('images'),  productController.createproduct);
+router.put("/",uploadCloud.array('images'), productController.updateproduct);
 //sort and filter ( brand , rating , keyname , price)
 router.get("/sort", productController.sort);
 //all role
-router.get("/getallproduct",  productController.getallproduct);
-router.get("/getproductbyid/:id", productController.getproductbyid);
+router.get("/", productController.getallproduct);
+router.get("/home",  productController.getall);
+router.get("/:id", productController.getproductbyid);
 
 // getallproduct , topselling , newproduct => client, user
-router.get("/getall",  productController.getall);
+// router.get("/allhome",  productController.getall);
+//route get product (category) -> client , user
+
 // //admin
-router.delete("/deleteproduct/:id",auth.verifyTokenAndAdmin, productController.deleteproduct);
+router.delete("/:id",auth.verifyTokenAndAdmin, productController.deleteproduct);
 module.exports = router;    
