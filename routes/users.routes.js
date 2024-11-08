@@ -11,7 +11,10 @@ router.post("/register", userController.register);
 router.post("/logintoken", userController.logintoken);
 router.post("/login", userController.login);
 router.post("/resetpass", userController.resetpass);
-router.get("/getuserbyid/:id", userController.getuserbyid);
+
+
+router.get("/:id", userController.getuserbyid);
+router.get("/:id/cart", userController.getcartbyuser);
 
 
 
