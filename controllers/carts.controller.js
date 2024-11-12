@@ -29,20 +29,6 @@ exports.createcart = async (req, res, next) => {
     }
 };
 
-//lay tat ca san pham gio hang cho users
-exports.getcartbyuser = async (req, res, next) => {
-    const userId = req.params.id;
-    try {
-        const existingCart = await Cart.findOne({ user: userId }).select("-__v -updatedAt -createdAt");
-        return res.status(200).json({
-            success: true,
-            data: existingCart
-        });
-    } catch (error) {
-        next(error);
-    }
-};
-
 
 //lay tat ca san pham gio hang cho users
 exports.addproduct = async (req, res, next) => {

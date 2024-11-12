@@ -6,12 +6,15 @@ const auth = require("../middlewares/auth");
 
 
 //role (admin , employee)
-router.post("/createbrand", uploadCloud.array('images'), brandController.createbrand);
- 
-router.get("/getallbrand",  brandController.getallbrand);
-router.get("/getbrandbyid",  brandController.getbrandbyid);
+router.post("/create", uploadCloud.array('images'), brandController.createbrand);
+
+router.get("/",  brandController.getallbrand);
+router.get("/:id",  brandController.getbrandbyid);
+router.get("/:id/products",  brandController.getallproduct);
 
 //(Xem bo sung => ko can thiet thi bo)
-router.post("/deletebrand/:id", brandController.deletebrand);
+router.delete("/:id", brandController.deletebrand);
+
+
 
 module.exports = router;    

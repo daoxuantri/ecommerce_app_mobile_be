@@ -6,12 +6,12 @@ const uploadCloud = require("../middlewares/multer");
 const auth = require("../middlewares/auth");
 
 //all role
-router.get("/getallcategories",  categoryController.getallcategories);
-router.get("/getcatebyid/:id",  categoryController.getcatebyid);
+router.get("/",  categoryController.getallcategories);
+router.get("/:id",  categoryController.getcatebyid);
 //admin , employee
-router.post("/createcategories",uploadCloud.array('images'),  categoryController.createcategories);
+router.post("/create",uploadCloud.array('images'),  categoryController.createcategories);
 //admin
-router.delete("/deletecategory/:id",auth.verifyTokenAndAdmin, categoryController.deletecategory);
+router.delete("/:id",auth.verifyTokenAndAdmin, categoryController.deletecategory);
 //get all product (category)
-router.get("/getallproduct/:id",  categoryController.getallproduct);
+router.get("/:id/products",  categoryController.getallproduct);
 module.exports = router;    

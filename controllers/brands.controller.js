@@ -80,6 +80,30 @@ exports.getbrandbyid = async (req, res, next) => {
     }
 };
 
+//lay sp theo danh muc
+exports.getallproduct = async (req, res, next) => {
+    try {
+        const brandId = req.params.id;
+        const listProduct = await Product.find({brand: brandId, status: true});
+        if (!listProduct) { 
+            return res.status(404).send({
+                success: false,
+                message: 'Brand không tồn tại!'});  
+        }
+
+
+         return res.status(200).send({
+            success: true,
+            message: 'Danh sách sản phẩm',
+            data: listProduct
+        });
+       
+    } catch (err) {
+        next(err);
+    }
+};
+
+
 
 // xem bo sung => ko can thiet thi bo
 exports.deletebrand = async (req, res, next) => {

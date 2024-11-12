@@ -116,7 +116,7 @@ exports.deletecategory = async (req, res, next) => {
 exports.getallproduct = async (req, res, next) => {
     try {
         const categoryId = req.params.id;
-        const listProduct = await Product.find({category: categoryId});
+        const listProduct = await Product.find({category: categoryId, status : true});
         if (!listProduct) { 
             return res.status(404).send({
                 success: false,
@@ -127,6 +127,7 @@ exports.getallproduct = async (req, res, next) => {
          return res.status(200).send({
             success: true,
             message: 'Danh sách sản phẩm',
+            data: listProduct
         });
        
     } catch (err) {

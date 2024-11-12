@@ -45,6 +45,7 @@ app.use("/orders", require("./routes/orders.routes"));
 
 
 app.use("/products", require("./routes/products.routes"));
+app.use("/productdetails", require("./routes/productdetails.routes"));
 app.use("/reviews", require("./routes/reviews.routes")); 
 
 

@@ -6,11 +6,10 @@ const router = express.Router();
 //duoc tao sau khi nguoi dung login lan dau tien vao
 
 //dung test
-router.post("/createcart", cartController.createcart); 
+// router.post("/create", cartController.createcart); 
 
-//role
-router.get("/getcartbyuser/:id", cartController.getcartbyuser);
-router.post("/addproduct", cartController.addproduct); 
-router.post("/removeproduct", cartController.removeproduct);
+
+router.put("/", cartController.addproduct); 
+router.delete("/", cartController.removeproduct);
 
 module.exports = router;    

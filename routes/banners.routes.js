@@ -8,14 +8,14 @@ const router = express.Router();
 //quảng cáo các chương trình khuyến mãi
 
 //(role: admin , employee)
-router.post("/createbanner",uploadCloud.array('images'),  bannerController.createbanner);
-router.post("/updatebanner",uploadCloud.array('images'),  bannerController.updatebanner);
+router.post("/create",uploadCloud.array('images'),  bannerController.createbanner);
+router.put("/",uploadCloud.array('images'),  bannerController.updatebanner);
 
 
 //all role
-router.get("/getallbanner",  bannerController.getallbanner);
-router.get("/getbannerbyid",  bannerController.getbannerbyid);
+router.get("/",  bannerController.getallbanner);
+router.get("/:id",  bannerController.getbannerbyid);
 
 // //admin (sua lai role.verifyCation)
-router.delete("/deletebanner/:id",auth.verifyTokenAndAdmin, bannerController.deletebanner);
+router.delete("/:id",auth.verifyTokenAndAdmin, bannerController.deletebanner);
 module.exports = router;    
