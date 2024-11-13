@@ -12,7 +12,18 @@ router.get("/sort", productController.sort);
 //all role
 router.get("/", productController.getallproduct);
 router.get("/home",  productController.getall);
+//flutter
+router.get("/homeflutter",  productController.getallflutter);
+
+
+
 router.get("/:id", productController.getproductbyid);
+
+
+
+
+
+
 
 // getallproduct , topselling , newproduct => client, user
 // router.get("/allhome",  productController.getall);

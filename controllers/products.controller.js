@@ -1,6 +1,7 @@
 const Product = require("../models/products");
 const Brand = require("../models/brands");
 const Category = require("../models/categories");
+const Banner =  require("../models/banners");
 const cloudinary = require('cloudinary').v2;
 const mongoose = require("mongoose"); 
 const {allSort, fillInfoListProducts} = require("../handlecontrollers/products.handle");
@@ -257,11 +258,65 @@ exports.getall = async (req, res, next) => {
             };
         }));
 
-        return res.json(categoriesWithProducts);
+        return res.status(200).send({
+            success: true ,
+            message : "Thành công",
+            categoriesWithProducts});
     } catch (err) {
         next (err)
     }
 };
+
+exports.getallflutter = async (req, res, next) => {
+    try {
+        const banners = await Banner.find();
+        const categories = await Category.find().limit(3);
+
+        const categoriesWithProducts = await Promise.all(categories.map(async (category) => {
+            const products = await Product.find({ category: category._id, status: true })
+                .populate('brand', '_id')
+                .lean();
+
+            const productsWithBrandIdOnly = products.map(product => ({
+                ...product,
+                brand: product.brand._id
+            }));
+
+            const brands = await Brand.find({
+                _id: { $in: products.map(product => product.brand) }
+            });
+
+            return {
+                category,
+                products: productsWithBrandIdOnly,
+                brands
+            };
+        }));
+
+        const allProducts = await Product.find({ status: true }).lean();
+
+        // Retrieve the top 20 products sorted by rating in descending order
+        const topRatedProducts = await Product.find({ status: true })
+            .sort({ rating: -1 })
+            .limit(20)
+            .lean();
+
+        return res.status(200).send({
+            success: true,
+            message: "Thành công",
+            data: {
+                banners,
+                categories: categoriesWithProducts,
+                products: allProducts,
+                rating: topRatedProducts
+            }
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
+
 
 
 // exports.sort = async (req, res, next) => {
