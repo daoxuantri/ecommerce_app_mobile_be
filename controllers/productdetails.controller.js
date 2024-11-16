@@ -32,42 +32,46 @@ exports.getbyid = async (req, res, next) => {
 };
 
 
-exports.createdetailproduct = async (req, res, next) => {
+exports.createDetailProduct = async (req, res, next) => {
     try {
         const { productId, specifications } = req.body;
 
         const foundProduct = await Product.findById(productId);
 
         // Validate input
-        if (!foundProduct || !productId || !specifications) {
+        if (!foundProduct || !productId || !specifications || !Array.isArray(specifications)) {
             return res.status(400).json({
-                success: true,
-                message: "Không tìm thấy" });
+                success: false,
+                message: "Dữ liệu không hợp lệ hoặc không tìm thấy sản phẩm",
+            });
         }
 
-        // Convert the specifications array into a Map format for MongoDB storage
-        const specificationsMap = new Map();
-        specifications.forEach(({ key, value }) => {
-            specificationsMap.set(key, value);
-        });
+        // Validate specifications format
+        const validSpecifications = specifications.every(
+            (spec) => spec.category && Array.isArray(spec.details)
+        );
+        if (!validSpecifications) {
+            return res.status(400).json({
+                success: false,
+                message: "Thông tin specifications không đúng định dạng",
+            });
+        }
 
-        // Create a new ProductDetails document with the transformed specifications
+        // Prepare the specifications data for MongoDB
         const productDetails = new ProductDetails({
             productId,
-            specifications: specificationsMap,
+            specifications,
         });
 
         // Save to database
         await productDetails.save();
 
-        // Convert the specifications Map back to an array for response
-        const responseSpecifications = Array.from(productDetails.specifications).map(([key, value]) => ({ key, value }));
-
         return res.status(201).json({
-            success: true ,
-            message: "Thành công",
-            data:  responseSpecifications});
-    }  catch (err) {
+            success: true,
+            message: "Thêm chi tiết sản phẩm thành công",
+            data: productDetails,
+        });
+    } catch (err) {
         next(err);
     }
 };
