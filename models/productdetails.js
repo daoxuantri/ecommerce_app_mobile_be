@@ -1,15 +1,31 @@
 const mongoose = require("mongoose");
-const {Schema} = mongoose;
-const productDetailsSchema = new Schema ({
-    productId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Product"
+const { Schema } = mongoose;
+
+// Schema cho từng chi tiết (detail)
+const detailSchema = new Schema({
+    key: { type: String, required: true },
+    value: { type: String, required: true }
+});
+
+// Schema cho từng mục specifications
+const specificationSchema = new Schema({
+    category: { type: String, required: true },
+    details: [detailSchema] // Mảng các chi tiết
+});
+
+// Schema chính cho ProductDetails
+const productDetailsSchema = new Schema(
+    {
+        productId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Product",
+            required: true
+        },
+        specifications: [specificationSchema] // Mảng các specifications
     },
-    specifications: { 
-        type: Map, of: Object }, 
-},{ timestamps: true }
+    { timestamps: true }
 );
 
-const ProductDetails  = mongoose.model("ProductDetails",productDetailsSchema);
+const ProductDetails = mongoose.model("ProductDetails", productDetailsSchema);
 
-module.exports= ProductDetails;
+module.exports = ProductDetails;
