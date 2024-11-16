@@ -219,7 +219,7 @@ exports.deleteproduct = async (req, res, next) => {
 exports.getproductbyid = async (req, res, next) => {
     try {
         const _id = req.params.id;
-        const foundId = await Product.find({_id : _id, status : true});
+        const foundId = await Product.findOne({_id : _id, status : true});
         if(!foundId){
             return res.status(404).send({
                 success: false,
