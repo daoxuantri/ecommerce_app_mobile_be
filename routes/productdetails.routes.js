@@ -4,7 +4,7 @@ const router = express.Router();
 
 
 router.get("/:id",  productdetailController.getbyid);
-router.post("/create",  productdetailController.createdetailproduct);
+router.post("/create",  productdetailController.createDetailProduct);
 
 
 module.exports = router;    

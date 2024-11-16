@@ -2,6 +2,7 @@ const Product = require("../models/products");
 const Brand = require("../models/brands");
 const Category = require("../models/categories");
 const Banner =  require("../models/banners");
+const ProductDetails =  require("../models/productdetails");
 const cloudinary = require('cloudinary').v2;
 const mongoose = require("mongoose"); 
 const {allSort, fillInfoListProducts} = require("../handlecontrollers/products.handle");
@@ -216,21 +217,54 @@ exports.deleteproduct = async (req, res, next) => {
 
 
 
+// exports.getproductbyid = async (req, res, next) => {
+//     try {
+//         const _id = req.params.id;
+//         const foundId = await Product.findOne({_id : _id, status : true});
+//         if(!foundId){
+//             return res.status(404).send({
+//                 success: false,
+//                 message: "Không tìm thấy sp"
+//             })
+//         }
+//         return res.status(201).send({
+//             success: true,
+//             message: "Thành công",
+//             data: foundId
+//         })
+//     } catch (err) {
+//         return next(err);
+//     }
+// };
+
 exports.getproductbyid = async (req, res, next) => {
     try {
         const _id = req.params.id;
-        const foundId = await Product.findOne({_id : _id, status : true});
-        if(!foundId){
+
+        // Tìm sản phẩm và đảm bảo sản phẩm có `status: true`
+        const foundProduct = await Product.findOne({ _id: _id, status: true })
+            .populate("category", "name") // Lấy thông tin tên category nếu cần
+            .populate("brand", "name"); // Lấy thông tin tên brand nếu cần
+
+        if (!foundProduct) {
             return res.status(404).send({
                 success: false,
-                message: "Không tìm thấy sp"
-            })
+                message: "Không tìm thấy sản phẩm"
+            });
         }
-        return res.status(201).send({
+
+        // Tìm chi tiết sản phẩm liên quan dựa trên `productId`
+        const productDetails = await ProductDetails.findOne({ productId: _id });
+
+        // Trả dữ liệu sản phẩm kèm chi tiết
+        return res.status(200).send({
             success: true,
             message: "Thành công",
-            data: foundId
-        })
+            data: {
+                product: foundProduct,
+                details: productDetails ? productDetails.specifications : [] // Nếu không có chi tiết, trả về mảng rỗng
+            }
+        });
     } catch (err) {
         return next(err);
     }
@@ -311,6 +345,50 @@ exports.getallflutter = async (req, res, next) => {
                 rating: topRatedProducts
             }
         });
+    } catch (err) {
+        next(err);
+    }
+};
+
+
+///list sp lien quan
+exports.listallproduct = async (req, res, next) => {
+    try {
+        const productId = req.params.id;
+
+        const product = await Product.findById(productId).exec();
+        
+        if (!product) {
+            return res.status(404).send({
+                success: false , 
+                message: "Không tìm thấy sản phẩm",
+            })
+        }
+
+        //find Related Products
+        const query = {
+        _id: { $ne: productId },
+        $or: [
+            { category: product.category }, 
+            { brand: product.brand }
+        ],
+        };
+
+        // Nếu cần lọc theo từ khóa tên (keyname)
+        if (product.name) {
+        query.$or.push({ name: { $regex: product.name, $options: "i" } });
+        }
+
+        // Thực hiện truy vấn để lấy danh sách sản phẩm liên quan
+        const relatedProducts = await Product.find(query)
+        .limit(10)  // Giới hạn số lượng sản phẩm liên quan
+        .exec();
+
+        return res.status(201).send({
+            success: true , 
+            message: "Thành công",
+            data: relatedProducts
+        })
     } catch (err) {
         next(err);
     }
