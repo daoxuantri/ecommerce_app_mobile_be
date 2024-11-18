@@ -2,7 +2,8 @@ const Product = require("../models/products");
 const Brand = require("../models/brands");
 const Category = require("../models/categories");
 const Banner =  require("../models/banners");
-const ProductDetails =  require("../models/productdetails");
+const Specifications =  require("../models/specifications");
+const VariantProduct = require("../models/variants");
 const cloudinary = require('cloudinary').v2;
 const mongoose = require("mongoose"); 
 const {allSort, fillInfoListProducts} = require("../handlecontrollers/products.handle");
@@ -249,26 +250,54 @@ exports.getproductbyid = async (req, res, next) => {
         if (!foundProduct) {
             return res.status(404).send({
                 success: false,
-                message: "Không tìm thấy sản phẩm"
+                message: "Không tìm thấy sản phẩm",
             });
         }
 
         // Tìm chi tiết sản phẩm liên quan dựa trên `productId`
-        const productDetails = await ProductDetails.findOne({ productId: _id });
+        const productDetails = await Specifications.findOne({ productId: _id });
 
-        // Trả dữ liệu sản phẩm kèm chi tiết
+        // Tìm thông tin variants liên quan đến product
+        const productVariants = await VariantProduct.find({ product: _id });
+
+        // Xử lý dữ liệu trước khi trả về
+        const filteredProduct = {
+            _id: foundProduct._id,
+            name: foundProduct.name,
+            images: foundProduct.images,
+            category: foundProduct.category,
+            brand: foundProduct.brand,
+            description: foundProduct.description,
+            price: foundProduct.price,
+            rating: foundProduct.rating,
+            sold: foundProduct.sold,
+            status: foundProduct.status,
+            isStock: foundProduct.isStock,
+        };
+
+        const filteredDetails = productDetails
+            ? productDetails.specifications.map((detail) => ({
+                  category: detail.category,
+                  details: detail.details.map(({ key, value }) => ({ key, value })),
+              }))
+            : [];
+
+        // Trả dữ liệu sản phẩm kèm chi tiết và variants
         return res.status(200).send({
             success: true,
             message: "Thành công",
             data: {
-                product: foundProduct,
-                details: productDetails ? productDetails.specifications : [] // Nếu không có chi tiết, trả về mảng rỗng
-            }
+                product: filteredProduct,
+                details: filteredDetails,
+                variants: productVariants || [], // Nếu không có variant, trả về mảng rỗng
+            },
         });
     } catch (err) {
         return next(err);
     }
 };
+
+
 
 exports.getall = async (req, res, next) => {
     try {
