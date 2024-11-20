@@ -17,6 +17,8 @@ const cartSchema = new Schema({
             quantity: { type: Number, require: true },
             images: { type: String, require: false },
             price: { type: Number, require: true },
+            memory: { type: String, required: false }, // Thêm dung lượng
+            color: { type: String, required: false }, // Thêm màu sắc
         }
     ],
     total: {
@@ -26,6 +28,7 @@ const cartSchema = new Schema({
     }
 },
     { timestamps: true }
-)
+);
+
 const Cart = mongoose.model("Cart",cartSchema);
 module.exports= Cart;

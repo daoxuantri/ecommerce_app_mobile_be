@@ -1,5 +1,5 @@
 const Product = require("../models/products");
-const ProductDetails = require("../models/productdetails");
+const Specifications = require("../models/specifications");
 const mongoose = require("mongoose"); 
 
 
@@ -8,7 +8,7 @@ exports.getbyid = async (req, res, next) => {
     try {
         const  productId  = req.params.id;
 
-        const productDetails = await ProductDetails.findOne({ productId }).populate('productId');
+        const productDetails = await Specifications.findOne({ productId }).populate('productId');
 
         if (!productDetails) {
             return res.status(404).json({ 
@@ -58,7 +58,7 @@ exports.createDetailProduct = async (req, res, next) => {
         }
 
         // Prepare the specifications data for MongoDB
-        const productDetails = new ProductDetails({
+        const productDetails = new Specifications({
             productId,
             specifications,
         });

@@ -14,7 +14,7 @@ const specificationSchema = new Schema({
 });
 
 // Schema chính cho ProductDetails
-const productDetailsSchema = new Schema(
+const SpecificationsSchema = new Schema(
     {
         productId: {
             type: mongoose.Schema.Types.ObjectId,
@@ -26,6 +26,6 @@ const productDetailsSchema = new Schema(
     { timestamps: true }
 );
 
-const ProductDetails = mongoose.model("ProductDetails", productDetailsSchema);
+const Specifications = mongoose.model("specifications", SpecificationsSchema);
 
-module.exports = ProductDetails;
+module.exports = Specifications;
