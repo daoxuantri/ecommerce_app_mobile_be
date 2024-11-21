@@ -242,10 +242,8 @@ exports.getproductbyid = async (req, res, next) => {
     try {
         const _id = req.params.id;
 
-        // Tìm sản phẩm và đảm bảo sản phẩm có `status: true`
-        const foundProduct = await Product.findOne({ _id: _id, status: true })
-            .populate("category", "name") // Lấy thông tin tên category nếu cần
-            .populate("brand", "name"); // Lấy thông tin tên brand nếu cần
+        // Tìm sản phẩm và chỉ lọc theo `status: true`
+        const foundProduct = await Product.findOne({ _id: _id, status: true });
 
         if (!foundProduct) {
             return res.status(404).send({
@@ -265,8 +263,8 @@ exports.getproductbyid = async (req, res, next) => {
             _id: foundProduct._id,
             name: foundProduct.name,
             images: foundProduct.images,
-            category: foundProduct.category,
-            brand: foundProduct.brand,
+            category: foundProduct.category, // Trả nguyên giá trị gốc (chỉ chứa `_id`)
+            brand: foundProduct.brand,       // Trả nguyên giá trị gốc (chỉ chứa `_id`)
             description: foundProduct.description,
             price: foundProduct.price,
             rating: foundProduct.rating,
@@ -296,6 +294,7 @@ exports.getproductbyid = async (req, res, next) => {
         return next(err);
     }
 };
+
 
 
 
