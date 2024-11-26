@@ -1,33 +1,30 @@
 const Product = require("../models/products");
 const Brand = require("../models/brands");
 const Category = require("../models/categories");
-const Banner =  require("../models/banners");
-const Specifications =  require("../models/specifications");
+const Banner = require("../models/banners");
+const Specifications = require("../models/specifications");
 const VariantProduct = require("../models/variants");
 const cloudinary = require('cloudinary').v2;
 const mongoose = require("mongoose"); 
-const {allSort, fillInfoListProducts} = require("../handlecontrollers/products.handle");
-
+const { allSort, fillInfoListProducts } = require("../handlecontrollers/products.handle");
 
 const PAGE_SIZE = 10;
 
 exports.createproduct = async (req, res, next) => {
     try {
-
-        const { name , category , brand , description , price} = req.body; 
+        const { name, category, brand, description } = req.body; // Đã loại bỏ trường price
 
         // Lấy link ảnh từ Cloudinary (đã upload trước đó)
         req.body.images = req.files.map((file) => file.path);
 
         const newProduct = new Product({
-            name: name,  
+            name: name,
             images: req.body.images,
-            category: category, 
-            brand: brand, 
+            category: category,
+            brand: brand,
             description: description,
-            price: price,
-
         });
+
         const saveProduct = await newProduct.save();
         if (!saveProduct) {
             return res.status(404).send({
@@ -35,7 +32,6 @@ exports.createproduct = async (req, res, next) => {
                 message: "Thêm sản phẩm không thành công!"
             });
         }
-
 
         return res.status(200).json({
             success: true,
@@ -47,9 +43,10 @@ exports.createproduct = async (req, res, next) => {
     }
 };
 
+
 exports.updateproduct = async (req, res, next) => {
     try {
-        const { idproduct, name, category, brand, description, price } = req.body;
+        const { idproduct, name, category, brand, description } = req.body; // Đã loại bỏ trường price
         let updateFields = {};
 
         // Kiểm tra và chỉ thêm các trường có trong yêu cầu
@@ -57,7 +54,6 @@ exports.updateproduct = async (req, res, next) => {
         if (category) updateFields.category = category;
         if (brand) updateFields.brand = brand;
         if (description) updateFields.description = description;
-        if (price) updateFields.price = price;
 
         // Kiểm tra có file ảnh để cập nhật không
         if (req.files && req.files.length > 0) {
@@ -87,6 +83,7 @@ exports.updateproduct = async (req, res, next) => {
         next(err);
     }
 };
+
 
 //get theo page or tất cả sản phẩm
 exports.getallproduct = async (req, res, next) => {
@@ -243,7 +240,7 @@ exports.getproductbyid = async (req, res, next) => {
         const _id = req.params.id;
 
         // Tìm sản phẩm và chỉ lọc theo `status: true`
-        const foundProduct = await Product.findOne({ _id: _id, status: true });
+        const foundProduct = await Product.findOne({ _id, status: true });
 
         if (!foundProduct) {
             return res.status(404).send({
@@ -255,7 +252,7 @@ exports.getproductbyid = async (req, res, next) => {
         // Tìm chi tiết sản phẩm liên quan dựa trên `productId`
         const productDetails = await Specifications.findOne({ productId: _id });
 
-        // Tìm thông tin variants liên quan đến product
+        // Tìm tất cả các variants liên quan đến sản phẩm
         const productVariants = await VariantProduct.find({ product: _id });
 
         // Xử lý dữ liệu trước khi trả về
@@ -266,7 +263,6 @@ exports.getproductbyid = async (req, res, next) => {
             category: foundProduct.category, // Trả nguyên giá trị gốc (chỉ chứa `_id`)
             brand: foundProduct.brand,       // Trả nguyên giá trị gốc (chỉ chứa `_id`)
             description: foundProduct.description,
-            price: foundProduct.price,
             rating: foundProduct.rating,
             sold: foundProduct.sold,
             status: foundProduct.status,
@@ -280,20 +276,21 @@ exports.getproductbyid = async (req, res, next) => {
               }))
             : [];
 
-        // Trả dữ liệu sản phẩm kèm chi tiết và variants
+        // Trả dữ liệu sản phẩm kèm chi tiết và tất cả các variants
         return res.status(200).send({
             success: true,
             message: "Thành công",
             data: {
                 product: filteredProduct,
                 details: filteredDetails,
-                variants: productVariants || [], // Nếu không có variant, trả về mảng rỗng
+                variants: productVariants || [],
             },
         });
     } catch (err) {
         return next(err);
     }
 };
+
 
 
 
@@ -306,7 +303,16 @@ exports.getall = async (req, res, next) => {
         // Duyệt qua từng category
         const categoriesWithProducts = await Promise.all(categories.map(async (category) => {
             // Lấy tất cả sản phẩm theo category
-            const products = await Product.find({ category: category._id , status : true}).populate('brand');
+            const products = await Product.find({ category: category._id, status: true }).populate('brand');
+
+            // Duyệt qua từng sản phẩm để lấy variants
+            const productsWithVariants = await Promise.all(products.map(async (product) => {
+                // Lấy các variants liên quan đến product
+                const variants = await VariantProduct.find({ product: product._id });
+
+                // Gắn variants vào product
+                return { ...product.toObject(), variants };
+            }));
 
             // Lấy tất cả brand có sản phẩm thuộc category này
             const brands = await Brand.find({
@@ -315,68 +321,79 @@ exports.getall = async (req, res, next) => {
 
             return {
                 category,
-                products,
+                products: productsWithVariants,
                 brands
             };
         }));
-
-        return res.status(200).send({
-            success: true ,
-            message : "Thành công",
-            categoriesWithProducts});
-    } catch (err) {
-        next (err)
-    }
-};
-
-exports.getallflutter = async (req, res, next) => {
-    try {
-        const banners = await Banner.find();
-        const categories = await Category.find().limit(3);
-
-        const categoriesWithProducts = await Promise.all(categories.map(async (category) => {
-            const products = await Product.find({ category: category._id, status: true })
-                .populate('brand', '_id')
-                .lean();
-
-            const productsWithBrandIdOnly = products.map(product => ({
-                ...product,
-                brand: product.brand._id
-            }));
-
-            const brands = await Brand.find({
-                _id: { $in: products.map(product => product.brand) }
-            });
-
-            return {
-                category,
-                products: productsWithBrandIdOnly,
-                brands
-            };
-        }));
-
-        const allProducts = await Product.find({ status: true }).lean();
-
-        // Retrieve the top 20 products sorted by rating in descending order
-        const topRatedProducts = await Product.find({ status: true })
-            .sort({ rating: -1 })
-            .limit(20)
-            .lean();
 
         return res.status(200).send({
             success: true,
             message: "Thành công",
-            data: {
-                banners,
-                categories: categoriesWithProducts,
-                products: allProducts,
-                rating: topRatedProducts
-            }
+            categoriesWithProducts
         });
     } catch (err) {
         next(err);
     }
 };
+
+
+exports.getallflutter = async (req, res, next) => {
+    try {
+        const banners = await Banner.find().select('-createdAt -updatedAt -__v');
+
+        const categories = await Category.find().limit(3).select('-createdAt -updatedAt -__v');
+
+        const categoriesWithProducts = await Promise.all(
+            categories.map(async (category) => {
+                const products = await Product.find({ category: category._id, status: true })
+                    .select('-createdAt -updatedAt -__v')
+                    .lean();
+
+                // Sửa lại trường brand để chỉ chứa _id
+                const productsWithVariants = await Promise.all(
+                    products.map(async (product) => {
+                        const variants = await VariantProduct.find({ product: product._id }).select('-createdAt -updatedAt -__v');
+                        return {
+                            ...product,
+                            brand: product.brand.toString(), // Lấy trực tiếp _id
+                            variants,
+                        };
+                    })
+                );
+
+                return {
+                    category,
+                    products: productsWithVariants,
+                };
+            })
+        );
+
+        const allProducts = await Product.find({ status: true })
+            .select('-createdAt -updatedAt -__v')
+            .lean();
+
+        const topRatedProducts = await Product.find({ status: true })
+            .sort({ rating: -1 })
+            .limit(20)
+            .select('-createdAt -updatedAt -__v')
+            .lean();
+
+        return res.status(200).send({
+            success: true,
+            message: 'Thành công',
+            data: {
+                banners,
+                categories: categoriesWithProducts,
+                products: allProducts,
+                rating: topRatedProducts,
+            },
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
+
 
 
 ///list sp lien quan
