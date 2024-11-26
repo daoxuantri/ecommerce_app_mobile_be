@@ -1,6 +1,7 @@
 const VariantProduct = require("../models/variants");
-const Product = require("../models/products");  
-//create
+const Product = require("../models/products");
+
+// Create Variant
 exports.createvariant = async (req, res, next) => {
     try {
         const { productId, memory, variants } = req.body;
@@ -14,11 +15,26 @@ exports.createvariant = async (req, res, next) => {
             });
         }
 
+        // Kiểm tra và chuẩn hóa dữ liệu variants
+        const formattedVariants = variants.map(variant => {
+            if (!variant.price || !variant.price.initial) {
+                throw new Error("Each variant must have an 'initial' price.");
+            }
+
+            return {
+                color: variant.color,
+                price: {
+                    initial: variant.price.initial,
+                    discount: variant.price.discount || null, // Nếu không có giảm giá, đặt discount là null
+                },
+            };
+        });
+
         // Tạo variant mới
         const newVariant = new VariantProduct({
             product: productId,
-            memory: memory || null, // Đặt memory là null nếu không cần
-            variants: variants,
+            memory: memory || null, // Đặt memory là null nếu không cung cấp
+            variants: formattedVariants,
         });
 
         // Lưu vào cơ sở dữ liệu
@@ -30,9 +46,14 @@ exports.createvariant = async (req, res, next) => {
             data: savedVariant,
         });
     } catch (error) {
-        next(error); // Xử lý lỗi
+        // Xử lý lỗi và trả về lỗi chi tiết
+        return res.status(400).json({
+            success: false,
+            message: error.message || "An error occurred",
+        });
     }
 };
+
 
 // //update 
 // exports.updatebanner = async (req, res, next) => {

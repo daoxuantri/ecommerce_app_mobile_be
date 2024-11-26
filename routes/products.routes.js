@@ -14,6 +14,8 @@ router.get("/", productController.getallproduct);
 router.get("/home",  productController.getall);
 //flutter
 router.get("/homeflutter",  productController.getallflutter);
+
+
 //get list sp lien quan 
 router.get("/:id/listallproduct",  productController.listallproduct);
 
