@@ -49,7 +49,7 @@ app.use("/specifications", require("./routes/specifications.routes"));
 app.use("/variants", require("./routes/variants.routes"));
 app.use("/favourites", require("./routes/favourites.routes")); 
 app.use("/reviews", require("./routes/reviews.routes")); 
-
+app.use("/filters", require("./routes/filters.routes"));
 
 
 // app.use(
