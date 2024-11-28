@@ -295,47 +295,107 @@ exports.getproductbyid = async (req, res, next) => {
 
 
 
+// exports.getall = async (req, res, next) => {
+//     try {
+//         // Lấy tất cả các category
+//         const categories = await Category.find();
+
+//         // Duyệt qua từng category
+//         const categoriesWithProducts = await Promise.all(categories.map(async (category) => {
+//             // Lấy tất cả sản phẩm theo category
+//             const products = await Product.find({ category: category._id, status: true }).populate('brand');
+
+//             // Duyệt qua từng sản phẩm để lấy variants
+//             const productsWithVariants = await Promise.all(products.map(async (product) => {
+//                 // Lấy các variants liên quan đến product
+//                 const variants = await VariantProduct.find({ product: product._id });
+
+//                 // Gắn variants vào product
+//                 return { ...product.toObject(), variants };
+//             }));
+
+//             // Lấy tất cả brand có sản phẩm thuộc category này
+//             const brands = await Brand.find({
+//                 _id: { $in: products.map(product => product.brand) }
+//             });
+
+//             return {
+//                 category,
+//                 products: productsWithVariants,
+//                 brands
+//             };
+//         }));
+
+//         return res.status(200).send({
+//             success: true,
+//             message: "Thành công",
+//             categoriesWithProducts
+//         });
+//     } catch (err) {
+//         next(err);
+//     }
+// };
 exports.getall = async (req, res, next) => {
     try {
-        // Lấy tất cả các category
-        const categories = await Category.find();
-
-        // Duyệt qua từng category
-        const categoriesWithProducts = await Promise.all(categories.map(async (category) => {
-            // Lấy tất cả sản phẩm theo category
-            const products = await Product.find({ category: category._id, status: true }).populate('brand');
-
-            // Duyệt qua từng sản phẩm để lấy variants
-            const productsWithVariants = await Promise.all(products.map(async (product) => {
-                // Lấy các variants liên quan đến product
-                const variants = await VariantProduct.find({ product: product._id });
-
-                // Gắn variants vào product
-                return { ...product.toObject(), variants };
-            }));
-
-            // Lấy tất cả brand có sản phẩm thuộc category này
-            const brands = await Brand.find({
-                _id: { $in: products.map(product => product.brand) }
-            });
-
-            return {
-                category,
-                products: productsWithVariants,
-                brands
-            };
-        }));
-
-        return res.status(200).send({
-            success: true,
-            message: "Thành công",
-            categoriesWithProducts
-        });
+      // Lấy tất cả các category với _id và name
+      const categories = await Category.find().select('_id name').lean();
+  
+      // Lấy tất cả sản phẩm thuộc tất cả các category, trạng thái `true`, sắp xếp theo createdAt mới nhất
+      const products = await Product.find({
+        category: { $in: categories.map((category) => category._id) },
+        status: true,
+      })
+        .sort({ createdAt: -1 }) // Sắp xếp theo thời gian mới nhất
+        .populate('brand', 'name images') // Lấy thông tin brand
+        .lean();
+  
+      // Tạo danh sách sản phẩm và thương hiệu cho từng category
+      const result = await Promise.all(
+        categories.map(async (category) => {
+          const categoryProducts = products.filter((product) => product.category.toString() === category._id.toString())
+          .slice(0, 20);
+  
+          // Lấy thông tin variants cho từng sản phẩm trong category
+          const productsWithVariants = await Promise.all(
+            categoryProducts.map(async (product) => {
+              const variants = await VariantProduct.find({ product: product._id }).lean();
+  
+              // Dữ liệu cần lấy từ variants
+              const formattedData = {
+                memories: [...new Set(variants.map((v) => v.memory))],
+                colors: [...new Set(variants.flatMap((v) => v.variants.map((variant) => variant.color)))],
+                initPrice: variants[0]?.variants[0]?.price.initial || null,
+                discPrice: variants[0]?.variants[0]?.price.discount || null,
+              };
+  
+              return {
+                ...product,
+                ...formattedData,
+              };
+            })
+          );
+  
+          // Lấy danh sách unique brand trong category
+          const brands = [...new Map(categoryProducts.map((product) => [product.brand._id, product.brand])).values()];
+  
+          return {
+            category,
+            products: productsWithVariants,
+            brands,
+          };
+        })
+      );
+  
+      return res.status(200).send({
+        success: true,
+        message: 'Thành công',
+        data: result,
+      });
     } catch (err) {
-        next(err);
+      next(err);
     }
-};
-
+  };
+  
 
 exports.getallflutter = async (req, res, next) => {
     try {

@@ -10,8 +10,16 @@ router.get("/",  categoryController.getallcategories);
 router.get("/:id",  categoryController.getcatebyid);
 //admin , employee
 router.post("/create",uploadCloud.array('images'),  categoryController.createcategories);
+
+
 //admin
 router.delete("/:id",auth.verifyTokenAndAdmin, categoryController.deletecategory);
 //get all product (category)
 router.get("/:id/products",  categoryController.getallproduct);
+
+//get filter options for category
+router.get("/:id/filters", categoryController.getFilterOptions);
+
+//get brands options for category
+router.get("/:id/brands", categoryController.getAllBrand);
 module.exports = router;    
