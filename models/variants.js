@@ -6,16 +6,16 @@ const variantSchema = new Schema(
     product: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Product",
-      default: null,
     },
     memory: {
       type: String,
+      required: false
     },
     variants: [
       {
-        color: { type: String, required: true },
+        color: { type: String, required: false },
         price: {
-          initial: { type: Number, required: true }, 
+          initial: { type: Number, required: false }, 
           discount: { type: Number, default: null }, 
         },
       },

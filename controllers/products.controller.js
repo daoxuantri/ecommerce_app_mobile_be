@@ -399,23 +399,27 @@ exports.getall = async (req, res, next) => {
 
 exports.getallflutter = async (req, res, next) => {
     try {
-        const banners = await Banner.find().select('-createdAt -updatedAt -__v');
+        const banners = await Banner.find()
+            .select('-createdAt -updatedAt -__v -description'); // Loại bỏ trường `description`
 
-        const categories = await Category.find().limit(3).select('-createdAt -updatedAt -__v');
+        const categories = await Category.find()
+            .limit(3)
+            .select('-createdAt -updatedAt -__v');
 
         const categoriesWithProducts = await Promise.all(
             categories.map(async (category) => {
                 const products = await Product.find({ category: category._id, status: true })
-                    .select('-createdAt -updatedAt -__v')
+                    .select('-createdAt -updatedAt -__v -category -brand -description -status -isStock') // Loại bỏ các trường không mong muốn
                     .lean();
 
-                // Sửa lại trường brand để chỉ chứa _id
                 const productsWithVariants = await Promise.all(
                     products.map(async (product) => {
-                        const variants = await VariantProduct.find({ product: product._id }).select('-createdAt -updatedAt -__v');
+                        const variants = await VariantProduct.find({ product: product._id })
+                            .select('-createdAt -updatedAt -__v');
+
                         return {
                             ...product,
-                            brand: product.brand.toString(), // Lấy trực tiếp _id
+                            images: product.images ? [product.images[0]] : [], // Lấy ảnh đầu tiên
                             variants,
                         };
                     })
@@ -428,15 +432,25 @@ exports.getallflutter = async (req, res, next) => {
             })
         );
 
-        const allProducts = await Product.find({ status: true })
-            .select('-createdAt -updatedAt -__v')
-            .lean();
-
+        // Lấy top-rated sản phẩm và kẹp variants trực tiếp
         const topRatedProducts = await Product.find({ status: true })
             .sort({ rating: -1 })
             .limit(20)
-            .select('-createdAt -updatedAt -__v')
+            .select('-createdAt -updatedAt -__v -category -brand -description -status -isStock') // Loại bỏ các trường không mong muốn
             .lean();
+
+        const adjustedTopRatedProducts = await Promise.all(
+            topRatedProducts.map(async (product) => {
+                const variants = await VariantProduct.find({ product: product._id })
+                    .select('-createdAt -updatedAt -__v');
+
+                return {
+                    ...product,
+                    images: product.images ? [product.images[0]] : [], // Chỉ lấy ảnh đầu tiên
+                    variants, // Kẹp `variants` vào sản phẩm
+                };
+            })
+        );
 
         return res.status(200).send({
             success: true,
@@ -444,8 +458,7 @@ exports.getallflutter = async (req, res, next) => {
             data: {
                 banners,
                 categories: categoriesWithProducts,
-                products: allProducts,
-                rating: topRatedProducts,
+                rating: adjustedTopRatedProducts, // Trả về sản phẩm với variants kẹp trực tiếp
             },
         });
     } catch (err) {
