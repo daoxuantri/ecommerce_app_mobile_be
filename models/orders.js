@@ -18,16 +18,19 @@ const orderSchema = new Schema(
                     require: true,
                     ref: 'Product',
                 },
-                name: { type: String, require: true },
-                quantity: { type: Number, require: true },
+                name: { type: String  },
+                quantity: { type: Number},
                 images: { type: String, require: false },
-                price: { type: Number, require: true }
+                price: { type: Number, },
+                memory: {type: String, required : false},
+                color:{type: String , required: false}
+
             },
         ],
         orderStatus: {
             type: String,
-            enum: paymentMethods,
-            default: PROGRESS
+            enum: orderStatus,
+            default: 'PROGRESS'
         },
         total: {
             type: Number,
