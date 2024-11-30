@@ -511,8 +511,67 @@ exports.listallproduct = async (req, res, next) => {
         next(err);
     }
 };
-
-
+exports.searchProduct = async (req, res, next) => {
+    try {
+      const { keyword, sort } = req.query;
+  
+      // Tìm kiếm sản phẩm theo keyword trong tên
+      const searchQuery = {
+        $and: [
+          { name: new RegExp(keyword, "i") }, // Tìm kiếm theo tên
+          { status: true }, // Chỉ lấy sản phẩm đang hoạt động
+        ],
+      };
+  
+      // Khởi tạo query
+      let productQuery = Product.find(searchQuery).lean();
+  
+      // Thêm sắp xếp nếu có tham số sort
+      if (sort) {
+        const [sortBy, order] = sort.split("_");
+        const sortOrder = order === "asc" ? 1 : -1;
+  
+        if (sortBy === "price") {
+          productQuery = productQuery.sort({ "price.discount": sortOrder });
+        } else if (sortBy === "name") {
+          productQuery = productQuery.sort({ name: sortOrder });
+        }
+      }
+  
+      // Lấy danh sách sản phẩm
+      const products = await productQuery;
+  
+      // Lấy thông tin chi tiết sản phẩm từ variants
+      const productsDetails = await Promise.all(
+        products.map(async (product) => {
+          const variants = await VariantProduct.find({ product: product._id }, "memory variants").lean();
+          return {
+            ...product,
+            memories: [...new Set(variants.map((v) => v.memory))],
+            colors: [
+              ...new Set(
+                variants.flatMap((v) =>
+                  v.variants.map((variant) => variant.color)
+                )
+              ),
+            ],
+            initPrice: variants[0]?.variants[0]?.price.initial || null,
+            discPrice: variants[0]?.variants[0]?.price.discount || null,
+          };
+        })
+      );
+  
+      res.status(200).json({
+        success: true,
+        products: productsDetails,
+      });
+    } catch (error) {
+      console.error("Error searching products:", error);
+      next(error);
+    }
+  };
+  
+  
 
 
 // exports.sort = async (req, res, next) => {
