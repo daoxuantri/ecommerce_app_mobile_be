@@ -14,6 +14,7 @@ router.post("/create",uploadCloud.array('images'),  categoryController.createcat
 
 //admin
 router.delete("/:id",auth.verifyTokenAndAdmin, categoryController.deletecategory);
+
 //get all product (category)
 router.get("/:id/products",  categoryController.getallproduct);
 
