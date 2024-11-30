@@ -209,132 +209,163 @@ exports.deletecategory = async (req, res, next) => {
 //     }
 // };
 exports.getallproduct = async (req, res, next) => {
-    try {
-      const categoryId = req.params.id;
-      const { brand, minPrice, maxPrice, sort, page = 1, limit = 10, ...filters } = req.query;
-  
-      // Chuyển đổi `page` và `limit` sang kiểu số
-      const currentPage = parseInt(page, 10) || 1;
-      const pageSize = parseInt(limit, 10) || 10;
-  
-      // Tìm thông tin thương hiệu
-      const brandDoc = brand ? await Brand.findOne({ name: brand }).lean() : null;
-  
-      // Tìm thông tin các key filter của danh mục
-      const filterData = await Filter.findOne({ categoryId }).select("filters").lean();
-      if (!filterData) {
-        return res.status(404).send({
-          success: false,
-          message: "Filter không tồn tại!",
-        });
-      }
-      const filterKeys = filterData.filters.map((filter) => filter.key);
-  
-      // Lấy danh sách sản phẩm
-      const listProduct = await Product.find({
-        category: categoryId,
-        brand: brandDoc ? brandDoc._id : { $exists: true },
-        status: true,
-      }).lean();
-  
-      if (!listProduct.length) {
-        return res.status(404).send({
-          success: false,
-          message: "Không có sản phẩm nào trong danh mục!",
-        });
-      }
-  
-      // Hàm kiểm tra sản phẩm có khớp với filter hay không
-      const matchFilter = (specs, filters) =>
-        specs?.some((spec) => {
-          const filterValue = filters[spec.key];
-          if (!filterValue) return false;
-          return Array.isArray(filterValue)
-            ? filterValue.some((val) => spec.value.includes(val))
-            : spec.value.includes(filterValue);
-        });
-  
-      // Xử lý thông tin chi tiết sản phẩm
-      const productsDetails = await Promise.all(
-        listProduct.map(async (product) => {
-          const [variants, specs] = await Promise.all([
-            VariantProduct.find({ product: product._id }).lean(),
-            Specifications.findOne({ productId: product._id }).select("specifications").lean(),
-          ]);
-  
-          // Dữ liệu cần lấy từ variants
-          const formattedData = {
-            memories: [...new Set(variants.map((v) => v.memory))],
-            colors: [...new Set(variants.flatMap((v) => v.variants.map((variant) => variant.color)))],
-            initPrice: variants[0]?.variants[0]?.price.initial || null,
-            discPrice: variants[0]?.variants[0]?.price.discount || null,
-          };
-  
-          // Lọc thông số specifications theo key
-          const filteredSpecs =
-            specs?.specifications
-              ?.flatMap((spec) => spec.details)
-              ?.filter((detail) => filterKeys.includes(detail.key)) || [];
-  
-          if (Object.keys(filters).length && !matchFilter(filteredSpecs, filters)) {
-            return null; // Không khớp filter
-          }
-  
-          return {
-            ...product,
-            specifications: filteredSpecs,
-            ...formattedData,
-          };
-        })
-      );
-  
-      // Loại bỏ sản phẩm null không hợp lệ
-      const validProducts = productsDetails.filter(Boolean);
-  
-      // Lọc theo giá (nếu có)
-      const filteredByPrice = validProducts.filter((product) => {
-        if (!minPrice && !maxPrice) return true;
-        const price = product.discPrice || product.initPrice;
-        return (
-          (!minPrice || price >= parseFloat(minPrice)) &&
-          (!maxPrice || price <= parseFloat(maxPrice))
-        );
+  try {
+    const categoryId = req.params.id;
+    const {
+      brand,
+      minPrice,
+      maxPrice,
+      sort,
+      page = 1,
+      limit = 10,
+      ...filters
+    } = req.query;
+
+    // Chuyển đổi `page` và `limit` sang kiểu số
+    const currentPage = parseInt(page, 10) || 1;
+    const pageSize = parseInt(limit, 10) || 20;
+
+    // Tìm thông tin thương hiệu
+    const brandDoc = brand ? await Brand.findOne({ name: brand }).lean() : null;
+
+    // Tìm thông tin các key filter của danh mục
+    const filterData = await Filter.findOne({ categoryId })
+      .select("filters")
+      .lean();
+    if (!filterData) {
+      return res.status(404).send({
+        success: false,
+        message: "Filter không tồn tại!",
       });
-  
-      // Sắp xếp sản phẩm theo giá nếu có tham số sort
-      if (sort) {
-        const [sortBy, order] = sort.split('_');
-        if (sortBy === 'price') {
-          filteredByPrice.sort((a, b) => {
-            const priceA = a.discPrice || a.initPrice;
-            const priceB = b.discPrice || b.initPrice;
-            return order === 'asc' ? priceA - priceB : priceB - priceA;
-          });
-        }
-      }
-  
-      // Pagination - phân trang
-      const totalProducts = filteredByPrice.length;
-      const totalPages = Math.ceil(totalProducts / pageSize);
-      const startIndex = (currentPage - 1) * pageSize;
-      const paginatedProducts = filteredByPrice.slice(startIndex, startIndex + pageSize);
-  
-      return res.status(200).send({
-        success: true,
-        message: "Danh sách sản phẩm",
-        data: paginatedProducts,
-        pagination: {
-          currentPage,
-          totalPages,
-          totalProducts,
-          pageSize,
-        },
-      });
-    } catch (err) {
-      next(err);
     }
-  };
-  
+    const filterKeys = filterData.filters.map((filter) => filter.key);
+
+    // Chuyển đổi filters từ chuỗi thành mảng nếu cần thiết
+    const processedFilters = Object.fromEntries(
+      Object.entries(filters).map(([key, value]) => [
+        key,
+        typeof value === "string" ? value.split(",") : value,
+      ])
+    );
+
+    // Lấy danh sách sản phẩm
+    const listProduct = await Product.find({
+      category: categoryId,
+      brand: brandDoc ? brandDoc._id : { $exists: true },
+      status: true,
+    }).lean();
+
+    if (!listProduct.length) {
+      return res.status(404).send({
+        success: false,
+        message: "Không có sản phẩm nào trong danh mục!",
+      });
+    }
+
+    // Hàm kiểm tra sản phẩm có khớp với filter hay không
+    const matchFilter = (specs, filters) =>
+      specs?.every((spec) => {
+        const filterValues = filters[spec.key];
+        if (!filterValues) return true; // Nếu không có filter, chấp nhận tất cả
+        return Array.isArray(filterValues)
+          ? filterValues.some((val) => spec.value.includes(val))
+          : spec.value.includes(filterValues);
+      });
+
+    // Xử lý thông tin chi tiết sản phẩm
+    const productsDetails = await Promise.all(
+      listProduct.map(async (product) => {
+        const [variants, specs] = await Promise.all([
+          VariantProduct.find({ product: product._id }).lean(),
+          Specifications.findOne({ productId: product._id })
+            .select("specifications")
+            .lean(),
+        ]);
+
+        // Dữ liệu cần lấy từ variants
+        const formattedData = {
+          memories: [...new Set(variants.map((v) => v.memory))],
+          colors: [
+            ...new Set(
+              variants.flatMap((v) =>
+                v.variants.map((variant) => variant.color)
+              )
+            ),
+          ],
+          initPrice: variants[0]?.variants[0]?.price.initial || null,
+          discPrice: variants[0]?.variants[0]?.price.discount || null,
+        };
+
+        // Lọc thông số specifications theo key
+        const filteredSpecs =
+          specs?.specifications
+            ?.flatMap((spec) => spec.details)
+            ?.filter((detail) => filterKeys.includes(detail.key)) || [];
+
+        if (
+          Object.keys(processedFilters).length &&
+          !matchFilter(filteredSpecs, processedFilters)
+        ) {
+          return null; // Không khớp filter
+        }
+
+        return {
+          ...product,
+          specifications: filteredSpecs,
+          ...formattedData,
+        };
+      })
+    );
+
+    // Loại bỏ sản phẩm null không hợp lệ
+    const validProducts = productsDetails.filter(Boolean);
+
+    // Lọc theo giá (nếu có)
+    const filteredByPrice = validProducts.filter((product) => {
+      if (!minPrice && !maxPrice) return true;
+      const price = product.discPrice || product.initPrice;
+      return (
+        (!minPrice || price >= parseFloat(minPrice)) &&
+        (!maxPrice || price <= parseFloat(maxPrice))
+      );
+    });
+
+    // Sắp xếp sản phẩm theo giá nếu có tham số sort
+    if (sort) {
+      const [sortBy, order] = sort.split("_");
+      if (sortBy === "price") {
+        filteredByPrice.sort((a, b) => {
+          const priceA = a.discPrice || a.initPrice;
+          const priceB = b.discPrice || b.initPrice;
+          return order === "asc" ? priceA - priceB : priceB - priceA;
+        });
+      }
+    }
+
+    // Pagination - phân trang
+    const totalProducts = filteredByPrice.length;
+    const totalPages = Math.ceil(totalProducts / pageSize);
+    const startIndex = (currentPage - 1) * pageSize;
+    const paginatedProducts = filteredByPrice.slice(
+      startIndex,
+      startIndex + pageSize
+    );
+
+    return res.status(200).send({
+      success: true,
+      message: "Danh sách sản phẩm",
+      data: paginatedProducts,
+      pagination: {
+        currentPage,
+        totalPages,
+        totalProducts,
+        pageSize,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+};
 
 exports.getAllBrand = async (req, res, next) => {
   try {
@@ -371,14 +402,25 @@ exports.getAllBrand = async (req, res, next) => {
 exports.getFilterOptions = async (req, res, next) => {
   try {
     const categoryId = req.params.id;
-    const filterOptions = await Filter.findOne({ categoryId: categoryId });
+    const filterOptions = await Filter.findOne({
+      categoryId: categoryId,
+    }).select("filters");
+
+    if (!filterOptions) {
+      return res.status(404).send({
+        success: false,
+        message: "No filter options found for this category",
+      });
+    }
 
     return res.status(200).send({
       success: true,
       message: "Filter Options",
-      data: filterOptions,
+      data: filterOptions, // Trả về danh sách filters đơn giản
     });
   } catch (err) {
     next(err);
   }
 };
+
+
