@@ -158,7 +158,7 @@ exports.resetpass = async (req, res, next) => {
 exports.getuserbyid = async (req, res, next) => {
     try {
         const _id = req.params.id;
-        const foundId = await User.findById(_id);
+        const foundId = await User.findById(_id).select('-status');
 
         if(!foundId){
             return res.status(404).send({
