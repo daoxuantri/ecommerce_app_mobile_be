@@ -20,6 +20,7 @@ router.get("/homeflutter",  productController.getallflutter);
 router.get("/:id/listallproduct",  productController.listallproduct);
 
 
+router.get("/search", productController.searchProduct);
 
 router.get("/:id", productController.getproductbyid);
 

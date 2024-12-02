@@ -227,7 +227,9 @@
  
      console.log('vnpurl', vnpUrl);
  
-     res.redirect(vnpUrl)
+    //  res.redirect(vnpUrl)
+    res.status(200).json({ paymentUrl: vnpUrl });
+
  });
  
  router.get('/vnpay_return', function (req, res, next) {
