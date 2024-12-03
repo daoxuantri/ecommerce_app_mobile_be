@@ -7,6 +7,7 @@ const router = express.Router();
 //(role: admin , employee)
 router.post("/create",uploadCloud.array('images'),  productController.createproduct);
 router.put("/",uploadCloud.array('images'), productController.updateproduct);
+
 //sort and filter ( brand , rating , keyname , price)
 router.get("/sort", productController.sort);
 //all role
