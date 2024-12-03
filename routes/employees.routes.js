@@ -12,13 +12,15 @@ const { verifyHashedData } = require("../util/hashData");
 
 // chỉ có admin mới tạo acc cho user
 //(role admin)
-router.post("/register", employeeController.register);
+router.post("/register",employeeController.register);
 router.post("/login", employeeController.login);
 
+router.get("/products", employeeController.getProducts);
+router.get("/products/:productId",employeeController.getProductById)
 
 //resetpass-employee
-router.post("/getempbyid/:id", employeeController.getempbyid);
-router.get("/resetpass", employeeController.resetpass);
+router.post("/getempbyid/:id",employeeController.getempbyid);
+router.get("/resetpass",employeeController.resetpass);
 //send email
 router.post("/email_verification/:email", async (req, res) => {
     try {
