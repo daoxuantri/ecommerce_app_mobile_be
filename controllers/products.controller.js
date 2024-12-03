@@ -161,34 +161,6 @@ exports.sort = async (req, res, next) => {
     }
 };
 
-// // getall (mac dinh) 
-// exports.getall = async (req, res, next) => {
-//     try {
-//         const keyphone = '6710f1feec59de47203e24b4', keylaptop = '6728ae34103ff016b31ff2be';
-//         const findAllPhone = await Product.find({ category: keyphone })
-//             .sort({ sold: -1 })
-//             .limit(16);
-//         const findAllLaptop = await Product.find({ category: keylaptop })
-//             .sort({ sold: -1 })
-//             .limit(16);
-
-//         return res.status(200).send({
-//             success: true,
-//             message: "Thành công",
-//             data: {
-//                 mobilephone: findAllPhone,
-//                 laptop: findAllLaptop
-//             }
-//         });
-//     } catch (err) {
-//         next(err);
-//     }
-// };
-
-
-
-
-
 
 
 //role (admin)
@@ -213,27 +185,6 @@ exports.deleteproduct = async (req, res, next) => {
     }
 };
 
-
-
-// exports.getproductbyid = async (req, res, next) => {
-//     try {
-//         const _id = req.params.id;
-//         const foundId = await Product.findOne({_id : _id, status : true});
-//         if(!foundId){
-//             return res.status(404).send({
-//                 success: false,
-//                 message: "Không tìm thấy sp"
-//             })
-//         }
-//         return res.status(201).send({
-//             success: true,
-//             message: "Thành công",
-//             data: foundId
-//         })
-//     } catch (err) {
-//         return next(err);
-//     }
-// };
 
 exports.getproductbyid = async (req, res, next) => {
     try {
@@ -292,49 +243,6 @@ exports.getproductbyid = async (req, res, next) => {
 };
 
 
-
-
-
-// exports.getall = async (req, res, next) => {
-//     try {
-//         // Lấy tất cả các category
-//         const categories = await Category.find();
-
-//         // Duyệt qua từng category
-//         const categoriesWithProducts = await Promise.all(categories.map(async (category) => {
-//             // Lấy tất cả sản phẩm theo category
-//             const products = await Product.find({ category: category._id, status: true }).populate('brand');
-
-//             // Duyệt qua từng sản phẩm để lấy variants
-//             const productsWithVariants = await Promise.all(products.map(async (product) => {
-//                 // Lấy các variants liên quan đến product
-//                 const variants = await VariantProduct.find({ product: product._id });
-
-//                 // Gắn variants vào product
-//                 return { ...product.toObject(), variants };
-//             }));
-
-//             // Lấy tất cả brand có sản phẩm thuộc category này
-//             const brands = await Brand.find({
-//                 _id: { $in: products.map(product => product.brand) }
-//             });
-
-//             return {
-//                 category,
-//                 products: productsWithVariants,
-//                 brands
-//             };
-//         }));
-
-//         return res.status(200).send({
-//             success: true,
-//             message: "Thành công",
-//             categoriesWithProducts
-//         });
-//     } catch (err) {
-//         next(err);
-//     }
-// };
 exports.getall = async (req, res, next) => {
     try {
       // Lấy tất cả các category với _id và name
