@@ -19,6 +19,11 @@ const employeeSchema = new Schema ({
         trim: true ,
 
     },
+    role: {
+        type: String ,
+        enum: ["admin", "employee", "manager"],
+        default: "employee",
+    },
     contact:{
         type: String,
         required: true,
