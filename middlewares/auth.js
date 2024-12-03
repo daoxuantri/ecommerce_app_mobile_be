@@ -63,6 +63,36 @@ const verifyTokenAndAdmin = (req, res, next) => {
 };
 
 // function 
+exports.verifyToken = async (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    return res.status(401).send({
+      success: false,
+      message: 'Token không được cung cấp',
+    });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded;
+
+    if (decoded.role !== 'admin' && decoded.role !== 'employee' && decoded.role !== 'manager') {
+      return res.status(403).send({
+        success: false,
+        message: 'Bạn không có quyền truy cập',
+      });
+    }
+
+    next(); // Cho phép tiếp tục xử lý nếu hợp lệ
+  } catch (error) {
+    return res.status(401).send({
+      success: false,
+      message: 'Token không hợp lệ',
+    });
+  }
+};
 
 
 
