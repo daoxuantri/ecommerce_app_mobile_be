@@ -5,30 +5,35 @@ const Product = require("../models/products");
 const cloudinary = require('cloudinary').v2;
 const mongoose = require("mongoose");
 
-//done
 exports.createbrand = async (req, res, next) => {
     try {
+        // Lấy link ảnh từ Cloudinary (đã upload trước đó)
         req.body.images = req.files[0].path;
+
+        // Kiểm tra nếu nhãn hàng đã tồn tại
         const existBrand = await Brand.findOne({ name: req.body.name });
         if (existBrand) {
             const updateBrand = await Brand.findByIdAndUpdate(
                 existBrand._id,
                 {
-                    name: req.body.name,  
-                    images: req.body.images   
+                    name: req.body.name,
+                    images: req.body.images,
+                    status: req.body.status || existBrand.status, // Giữ trạng thái cũ nếu không cung cấp
                 },
                 { new: true }
             );
             return res.status(200).json({
                 success: true,
-                message: "Cập nhật nhãn hàng thành công ",
-                data: updateBrand
+                message: "Cập nhật nhãn hàng thành công",
+                data: updateBrand,
             });
         }
-        
+
+        // Tạo mới nhãn hàng với trạng thái
         const newBrand = new Brand({
-            name: req.body.name,  
-            images: req.body.images 
+            name: req.body.name,
+            images: req.body.images,
+            status: req.body.status || false, // Mặc định là `false` nếu không cung cấp
         });
 
         const saveBrand = await newBrand.save();
@@ -36,7 +41,7 @@ exports.createbrand = async (req, res, next) => {
         return res.status(200).json({
             success: true,
             message: "Tạo nhãn hàng thành công",
-            data: saveBrand
+            data: saveBrand,
         });
     } catch (err) {
         next(err);
@@ -44,10 +49,11 @@ exports.createbrand = async (req, res, next) => {
 };
 
 
+
 exports.getallbrand = async (req, res, next) => {
     try {
         
-        const listBrand = await Brand.find().select('-__v -createdAt -updatedAt');
+        const listBrand = await Brand.find({status : true}).select('-__v -createdAt -updatedAt');
         
         return res.status(200).send({
             success: true,
@@ -63,11 +69,17 @@ exports.getbrandbyid = async (req, res, next) => {
     try {
         const _id = req.params.id;
         const foundId = await Brand.findById(_id);
+        const findStatus = await Brand.find({_id : _id , status : true});
 
         if(!foundId){
             return res.status(404).send({
                 success: false,
                 message: "Không tìm thấy Brand"
+            })
+        }else if (findStatus.length == 0   ){
+            return res.status(404).send({
+                success: false,
+                message: "Nhãn hàng này hiện tại đã giới hạn"
             })
         }
         return res.status(201).send({
