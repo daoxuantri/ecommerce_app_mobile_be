@@ -32,7 +32,7 @@ const productSchema = new Schema ({
     },
     status: {
         type : Boolean,
-        default : true
+        default : false
     },
     isStock: {
         type : Boolean,

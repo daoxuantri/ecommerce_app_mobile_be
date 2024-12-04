@@ -4,7 +4,7 @@ const Product = require("../models/products");
 // Create Variant
 exports.createvariant = async (req, res, next) => {
     try {
-        const { productId, memory, variants } = req.body;
+        const { productId, memory, variants, stockQuantity } = req.body;
 
         // Kiểm tra sản phẩm có tồn tại
         const product = await Product.findById(productId);
@@ -27,6 +27,8 @@ exports.createvariant = async (req, res, next) => {
                     initial: variant.price.initial,
                     discount: variant.price.discount || null, // Nếu không có giảm giá, đặt discount là null
                 },
+                stockQuantity : variant.stockQuantity
+                
             };
         });
 

@@ -11,9 +11,8 @@ const Brand = require("../models/brands");
 exports.createcategories = async (req, res, next) => {
   try {
     // Lấy link ảnh từ Cloudinary (đã upload trước đó)
-    // req.body.images = req.files.map((file) => file.path);
-
     req.body.images = req.files[0].path;
+
     // Kiểm tra nếu danh mục đã tồn tại
     const existCategories = await Category.findOne({ name: req.body.name });
     if (existCategories) {
@@ -22,6 +21,7 @@ exports.createcategories = async (req, res, next) => {
         {
           name: req.body.name,
           images: req.body.images,
+          status: req.body.status || existCategories.status, // Giữ trạng thái cũ nếu không cung cấp
         },
         { new: true }
       );
@@ -32,9 +32,11 @@ exports.createcategories = async (req, res, next) => {
       });
     }
 
+    // Thiết lập status mặc định nếu không cung cấp
     const newCategories = new Category({
       name: req.body.name,
       images: req.body.images,
+      status: req.body.status || false,
     });
 
     const saveCategories = await newCategories.save();
@@ -49,9 +51,10 @@ exports.createcategories = async (req, res, next) => {
   }
 };
 
+
 exports.getallcategories = async (req, res, next) => {
   try {
-    const listCategories = await Category.find().select(
+    const listCategories = await Category.find({status : true}).select(
       "-__v -createdAt -updatedAt"
     );
 
@@ -68,9 +71,9 @@ exports.getallcategories = async (req, res, next) => {
 exports.getcatebyid = async (req, res, next) => {
   try {
     const _id = req.params.id;
-    const foundId = await Category.findById(_id);
+    const foundId = await Category.find({_id : _id , status : true});
 
-    if (!foundId) {
+    if (foundId.length == 0 ) {
       return res.status(404).send({
         success: false,
         message: "Không tìm thấy Category",

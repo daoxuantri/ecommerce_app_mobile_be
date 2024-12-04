@@ -50,6 +50,10 @@ app.use("/variants", require("./routes/variants.routes"));
 app.use("/favourites", require("./routes/favourites.routes")); 
 app.use("/reviews", require("./routes/reviews.routes")); 
 app.use("/filters", require("./routes/filters.routes"));
+app.use("/address", require("./routes/address.routes"));
+app.use("/payment", require("./routes/vnpay.routes")); // Tích hợp VNPay
+
+// Xử lý lỗi
 app.use("/statistics", require("./routes/statistics.routes"));
 
 // app.use(

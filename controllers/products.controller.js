@@ -12,7 +12,7 @@ const PAGE_SIZE = 10;
 
 exports.createproduct = async (req, res, next) => {
     try {
-        const { name, category, brand, description } = req.body; // Đã loại bỏ trường price
+        const { name, category, brand, description, status } = req.body; // Đã loại bỏ trường price
 
         // Lấy link ảnh từ Cloudinary (đã upload trước đó)
         req.body.images = req.files.map((file) => file.path);
@@ -23,6 +23,7 @@ exports.createproduct = async (req, res, next) => {
             category: category,
             brand: brand,
             description: description,
+            status : status
         });
 
         const saveProduct = await newProduct.save();
@@ -46,7 +47,7 @@ exports.createproduct = async (req, res, next) => {
 
 exports.updateproduct = async (req, res, next) => {
     try {
-        const { idproduct, name, category, brand, description } = req.body; // Đã loại bỏ trường price
+        const { idproduct, name, category, brand, description , status} = req.body; // Đã loại bỏ trường price
         let updateFields = {};
 
         // Kiểm tra và chỉ thêm các trường có trong yêu cầu
@@ -59,6 +60,7 @@ exports.updateproduct = async (req, res, next) => {
         if (req.files && req.files.length > 0) {
             updateFields.images = req.files.map((file) => file.path);
         }
+        if(status) updateFields.status = status;
 
         const existProduct = await Product.findById(idproduct);
         
@@ -103,7 +105,7 @@ exports.getallproduct = async (req, res, next) => {
                 }
             )
         }else{
-            const listProduct = await Product.find().select('-__v -createdAt -updatedAt');
+            const listProduct = await Product.find({status : true}).select('-__v -createdAt -updatedAt');
         
         return res.status(200).send({
             success: true,
@@ -161,8 +163,6 @@ exports.sort = async (req, res, next) => {
     }
 };
 
-
-
 //role (admin)
 exports.deleteproduct = async (req, res, next) => {
     try {
@@ -191,7 +191,7 @@ exports.getproductbyid = async (req, res, next) => {
         const _id = req.params.id;
 
         // Tìm sản phẩm và chỉ lọc theo `status: true`
-        const foundProduct = await Product.findOne({ _id, status: true });
+        const foundProduct = await Product.findOne({ _id: _id, status: true });
 
         if (!foundProduct) {
             return res.status(404).send({
@@ -242,11 +242,10 @@ exports.getproductbyid = async (req, res, next) => {
     }
 };
 
-
 exports.getall = async (req, res, next) => {
     try {
       // Lấy tất cả các category với _id và name
-      const categories = await Category.find().select('_id name').lean();
+      const categories = await Category.find({status : true}).select('_id name').lean();
   
       // Lấy tất cả sản phẩm thuộc tất cả các category, trạng thái `true`, sắp xếp theo createdAt mới nhất
       const products = await Product.find({
@@ -303,6 +302,7 @@ exports.getall = async (req, res, next) => {
       next(err);
     }
   };
+
   
 
 exports.getallflutter = async (req, res, next) => {
@@ -310,7 +310,7 @@ exports.getallflutter = async (req, res, next) => {
         const banners = await Banner.find()
             .select('-createdAt -updatedAt -__v -description'); // Loại bỏ trường `description`
 
-        const categories = await Category.find()
+        const categories = await Category.find({status : true})
             .limit(3)
             .select('-createdAt -updatedAt -__v');
 
@@ -382,7 +382,7 @@ exports.listallproduct = async (req, res, next) => {
     try {
         const productId = req.params.id;
 
-        const product = await Product.findById(productId).exec();
+        const product = await Product.find({_id: productId, status : true}).exec();
         
         if (!product) {
             return res.status(404).send({

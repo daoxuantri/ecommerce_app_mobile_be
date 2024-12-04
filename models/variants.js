@@ -18,6 +18,7 @@ const variantSchema = new Schema(
           initial: { type: Number, required: false }, 
           discount: { type: Number, default: null }, 
         },
+        stockQuantity: {type : Number }
       },
     ],
   },

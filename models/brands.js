@@ -10,9 +10,9 @@ const brandSchema = new Schema ({
         type : String,
         trim: true
     },
-    status:{
-        type: Boolean,
-        default: true,
+    status: {
+        type : Boolean , 
+        default : false
     }
 }, { timestamps: true });
 
