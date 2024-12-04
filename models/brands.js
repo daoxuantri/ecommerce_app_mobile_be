@@ -9,6 +9,10 @@ const brandSchema = new Schema ({
     images:{
         type : String,
         trim: true
+    },
+    status:{
+        type: Boolean,
+        default: true,
     }
 }, { timestamps: true });
 
