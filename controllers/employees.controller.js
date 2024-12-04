@@ -4,6 +4,7 @@ const auth = require("../middlewares/auth");
 const Product = require("../models/products");
 const Specifications = require("../models/specifications");
 const VariantProduct = require("../models/variants");
+const { default: mongoose } = require("mongoose");
 
 //(role admin tạo tk employee)
 exports.register = async (req, res, next) => {
@@ -214,18 +215,182 @@ exports.getProductById = async (req, res, next) => {
       });
     }
 
-    const variants = await VariantProduct.find({ product: productId }).lean()
+    const variants = await VariantProduct.find({ product: productId }).lean();
     const data = {
-        ...specifications,
-        variants: variants ? variants : [], // Nếu không có variants thì trả về mảng rỗng
-      };
+      ...specifications,
+      variants: variants ? variants : [], // Nếu không có variants thì trả về mảng rỗng
+    };
     // Trả về kết quả
     return res.status(200).send({
       success: true,
       message: "Lấy specifications thành công",
-      data
+      data,
     });
   } catch (err) {
     return next(err);
   }
 };
+
+exports.getAllBrand = async (req, res, next) => {
+  try {
+    const categoryId = req.params.id;
+    const listBrandId = await Product.find({
+      category: categoryId,
+      status: true,
+    }).distinct("brand");
+
+    if (!listBrandId) {
+      return res.status(404).send({
+        success: false,
+        message: "Category không tồn tại!",
+      });
+    }
+
+    const listBrand = await Promise.all(
+      listBrandId.map(async (id) => {
+        const brand = await Brand.findById(id).select("name images _id");
+        return brand ? brand : null; // Trả về tên thương hiệu hoặc null
+      })
+    );
+
+    return res.status(200).send({
+      success: true,
+      message: "Danh sách sản phẩm",
+      data: listBrand,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.createProduct = async (req, res, next) => {
+  const session = await mongoose.startSession(); // Khởi tạo session
+  session.startTransaction(); // Bắt đầu transaction
+
+  try {
+    const {
+      name,
+      category,
+      brand,
+      description,
+      images,
+      status,
+      specifications,
+      memoryVariants,
+    } = req.body;
+
+    // Step 1: Create the product
+    const newProduct = new Product({
+      name,
+      images,
+      category,
+      brand,
+      description,
+      status,
+    });
+
+    const savedProduct = await newProduct.save();
+    if (!savedProduct) {
+      return res.status(400).json({
+        success: false,
+        message: "Thêm sản phẩm không thành công!",
+      });
+    }
+
+    // Step 2: Add specifications
+    if (specifications && Array.isArray(specifications)) {
+      const productDetails = new Specifications({
+        productId: savedProduct._id,
+        specifications,
+      });
+      await productDetails.save();
+    }
+
+    // Step 3: Add variants
+    if (memoryVariants && Array.isArray(memoryVariants)) {
+      for (const memoryVariant of memoryVariants) {
+        const { memory, variants } = memoryVariant;
+
+        const formattedVariants = variants.map((variant) => ({
+          color: variant.color,
+          price: {
+            initial: variant.price.initial,
+            discount: variant.price.discount || null,
+          },
+        }));
+
+        const newVariant = new VariantProduct({
+          product: savedProduct._id,
+          memory: memory || null,
+          variants: formattedVariants,
+        });
+
+        await newVariant.save();
+      }
+    }
+    // Commit transaction nếu tất cả các bước thành công
+    await session.commitTransaction();
+    session.endSession();
+
+    return res.status(201).json({
+      success: true,
+      message: "Sản phẩm đã được tạo thành công với đầy đủ thông tin",
+      data: savedProduct,
+    });
+  } catch (error) {
+    console.error("Error in createFullProduct:", error);
+    next(error);
+  }
+};
+
+exports.updateStatusProduct = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    const product = await Product.findById(id);
+    if (!product) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Sản phẩm không tìm thấy" });
+    }
+
+    product.status = status;
+    await product.save();
+    res
+      .status(200)
+      .json({
+        success: true,
+        message: "Cập nhật trạng thái sản phẩm thành công",
+      });
+  } catch (error) {
+    console.error("Error in updateStatusProduct:", error);
+    next(error);
+  }
+};
+
+exports.deleteProduct = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const product = await Product.findByIdAndDelete(id);
+    if (!product) {
+      return res
+       .status(404)
+       .json({ success: false, message: "Sản phẩm không tìm thấy" });
+    }
+    res
+     .status(200)
+     .json({ success: true, message: "Xóa sản phẩm thành công" });
+  } catch (error) {
+    console.error("Error in deleteProduct:", error);
+    next(error);
+  }
+}
+
+exports.getCategories = async(req, res, next) => {
+  try {
+    const categories = await Category.find().lean();
+    res.status(200).json({ success: true, data: categories });
+    } catch (error) {
+      next(error)
+    }
+}
