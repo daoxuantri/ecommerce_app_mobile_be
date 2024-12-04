@@ -76,3 +76,33 @@ exports.getalladdressbyuser = async (req, res, next) => {
         next(err);
     }
 };
+
+exports.getaddressdefault = async (req, res, next) => {
+    try {
+        const userId = req.params.idUser ;  
+
+        const userAddress = await Address.findOne(
+            { user: userId, "location.status": true }, 
+            { location: { $elemMatch: { status: true } } } 
+        );
+
+        if (!userAddress || userAddress.location.length === 0) {
+            return res.status(200).json({
+                success: true,
+                message: "Người dùng chưa có địa chỉ nào",
+                data: []
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Lấy danh sách địa chỉ thành công",
+            data: userAddress.location, 
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
+
+

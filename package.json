@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "await": "^0.2.6",
+    "axios": "^1.7.9",
     "bcrypt": "^5.1.1",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.20.3",
@@ -28,6 +29,7 @@
     "multer-storage-cloudinary": "^4.0.0",
     "node-fetch": "^3.3.2",
     "nodemailer": "^6.9.11",
+    "openai": "^4.75.0",
     "qs": "^6.13.1",
     "request": "^2.88.2",
     "serve-favicon": "^2.5.0",
