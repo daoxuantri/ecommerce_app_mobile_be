@@ -5,6 +5,8 @@ const Product = require("../models/products");
 const Specifications = require("../models/specifications");
 const VariantProduct = require("../models/variants");
 const { default: mongoose } = require("mongoose");
+const Brand = require("../models/brands");
+const Category = require("../models/categories");
 
 //(role admin tạo tk employee)
 exports.register = async (req, res, next) => {
@@ -263,21 +265,48 @@ exports.getAllBrand = async (req, res, next) => {
   }
 };
 
-exports.createProduct = async (req, res, next) => {
-  const session = await mongoose.startSession(); // Khởi tạo session
-  session.startTransaction(); // Bắt đầu transaction
+// exports.createProduct = async (req, res, next) => {
+//   try {
+//     const { name, category, brand, description, status } = req.body; // Đã loại bỏ trường price
 
+//     // Lấy link ảnh từ Cloudinary (đã upload trước đó)
+//     req.body.images = req.files.map((file) => file.path);
+
+//     const newProduct = new Product({
+//       name: name,
+//       images: req.body.images,
+//       category: category,
+//       brand: brand,
+//       description: description,
+//       status: status,
+//     });
+
+//     const saveProduct = await newProduct.save();
+//     if (!saveProduct) {
+//       return res.status(404).send({
+//         success: false,
+//         message: "Thêm sản phẩm không thành công!",
+//       });
+//     }
+
+//     return res.status(200).json({
+//       success: true,
+//       message: "Thêm sản phẩm thành công",
+//       data: saveProduct,
+//     });
+//   } catch (err) {
+//     next(err);
+//   }
+// };
+
+exports.createProduct = async (req, res, next) => {
   try {
-    const {
-      name,
-      category,
-      brand,
-      description,
-      images,
-      status,
-      specifications,
-      memoryVariants,
-    } = req.body;
+    const { name, category, brand, description, images, status } = req.body;
+    const specifications = JSON.parse(req.body.specifications || "[]"); // Parse specifications từ JSON string
+    const memoryVariants = JSON.parse(req.body.memoryVariants || "[]"); // Parse memoryVariants từ JSON string
+
+    console.log(JSON.stringify(specifications));
+    console.log(JSON.stringify(memoryVariants));
 
     // Step 1: Create the product
     const newProduct = new Product({
@@ -285,8 +314,8 @@ exports.createProduct = async (req, res, next) => {
       images,
       category,
       brand,
-      description,
       status,
+      description,
     });
 
     const savedProduct = await newProduct.save();
@@ -298,25 +327,25 @@ exports.createProduct = async (req, res, next) => {
     }
 
     // Step 2: Add specifications
-    if (specifications && Array.isArray(specifications)) {
-      const productDetails = new Specifications({
-        productId: savedProduct._id,
-        specifications,
-      });
-      await productDetails.save();
-    }
+
+    const productDetails = new Specifications({
+      productId: savedProduct._id,
+      specifications,
+    });
+    await productDetails.save();
 
     // Step 3: Add variants
-    if (memoryVariants && Array.isArray(memoryVariants)) {
-      for (const memoryVariant of memoryVariants) {
-        const { memory, variants } = memoryVariant;
 
+    for (const memoryVariant of memoryVariants) {
+      const { memory, variants } = memoryVariant;
+      if (variants && variants.length > 0) {
         const formattedVariants = variants.map((variant) => ({
           color: variant.color,
           price: {
             initial: variant.price.initial,
             discount: variant.price.discount || null,
           },
+          stockQuantity: variant.stockQuantity,
         }));
 
         const newVariant = new VariantProduct({
@@ -326,11 +355,10 @@ exports.createProduct = async (req, res, next) => {
         });
 
         await newVariant.save();
+      } else {
+        console.log("No variants available for memory:", memory);
       }
     }
-    // Commit transaction nếu tất cả các bước thành công
-    await session.commitTransaction();
-    session.endSession();
 
     return res.status(201).json({
       success: true,
@@ -338,7 +366,7 @@ exports.createProduct = async (req, res, next) => {
       data: savedProduct,
     });
   } catch (error) {
-    console.error("Error in createFullProduct:", error);
+    console.error("Lỗi trong quá trình tạo sản phẩm:", error);
     next(error);
   }
 };
@@ -356,12 +384,10 @@ exports.updateStatusProduct = async (req, res, next) => {
 
     product.status = status;
     await product.save();
-    res
-      .status(200)
-      .json({
-        success: true,
-        message: "Cập nhật trạng thái sản phẩm thành công",
-      });
+    res.status(200).json({
+      success: true,
+      message: "Cập nhật trạng thái sản phẩm thành công",
+    });
   } catch (error) {
     console.error("Error in updateStatusProduct:", error);
     next(error);
@@ -374,23 +400,39 @@ exports.deleteProduct = async (req, res, next) => {
     const product = await Product.findByIdAndDelete(id);
     if (!product) {
       return res
-       .status(404)
-       .json({ success: false, message: "Sản phẩm không tìm thấy" });
+        .status(404)
+        .json({ success: false, message: "Sản phẩm không tìm thấy" });
     }
-    res
-     .status(200)
-     .json({ success: true, message: "Xóa sản phẩm thành công" });
+    res.status(200).json({ success: true, message: "Xóa sản phẩm thành công" });
   } catch (error) {
     console.error("Error in deleteProduct:", error);
     next(error);
   }
-}
+};
 
-exports.getCategories = async(req, res, next) => {
+exports.getCategories = async (req, res, next) => {
   try {
     const categories = await Category.find().lean();
     res.status(200).json({ success: true, data: categories });
-    } catch (error) {
-      next(error)
-    }
-}
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getBrands = async (req, res, next) => {
+  try {
+    const brands = await Brand.find().lean();
+    res.status(200).json({ success: true, data: brands });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getUsers = async (req, res, next) => {
+  try {
+    const users = await User.find().select("-__v -password -updatedAt").lean();
+    res.status(200).json({ success: true, data: users });
+  } catch (error) {
+    next(error);
+  }
+};

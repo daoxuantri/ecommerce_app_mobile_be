@@ -4,7 +4,7 @@ const router = express.Router();
 const Employee = require("../models/employees"); 
 const OTP = require("../otp/model");
 const auth = require("../middlewares/auth");
-
+const uploadCloud = require("../middlewares/multer");
 //các function dùng để resetpass
 const {sendOTP, verifyOTP, sendVerificationOTPEmail, deleteOTP} = require("../otp/controller");
 const { verifyHashedData } = require("../util/hashData");
@@ -16,8 +16,11 @@ router.post("/register",employeeController.register);
 router.post("/login", employeeController.login);
 
 router.get("/products", employeeController.getProducts);
-router.get("/products/:productId",employeeController.getProductById)
-
+router.get("/products/:productId",employeeController.getProductById);
+router.post("/products", uploadCloud.array('images'),employeeController.createProduct);
+router.get("/brands", employeeController.getBrands);
+router.get("/categories", employeeController.getCategories);
+router.get("/users", employeeController.getUsers);
 //resetpass-employee
 router.post("/getempbyid/:id",employeeController.getempbyid);
 router.get("/resetpass",employeeController.resetpass);
