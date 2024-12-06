@@ -19,7 +19,8 @@ router.get("/homeflutter",  productController.getallflutter);
 
 //get list sp lien quan 
 router.get("/:id/listallproduct",  productController.listallproduct);
-
+//get list sp lien quan cho website
+router.get("/:id/relatedproduct", productController.getRelatedProducts);
 
 router.get("/search", productController.searchProduct);
 
