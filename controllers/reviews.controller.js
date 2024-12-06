@@ -105,7 +105,7 @@ exports.getallreview = async (req, res, next) => {
     // Tìm tất cả các đánh giá liên quan đến sản phẩm
     const reviews = await Review.find({ parentProduct: productId })
       .populate("owner", "email") // Populate thông tin email từ User
-      .select("owner parentProduct content rating"); // Chỉ chọn các trường cần thiết
+      .select("owner parentProduct content rating createdAt"); // Chỉ chọn các trường cần thiết
 
     // Trả về kết quả
     return res.status(200).json({
@@ -115,6 +115,7 @@ exports.getallreview = async (req, res, next) => {
         rating: review.rating,
         content: review.content,
         productId: review.parentProduct,
+        createdAt: review.createdAt,
       })),
     });
   } catch (error) {
