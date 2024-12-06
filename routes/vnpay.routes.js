@@ -139,6 +139,7 @@
  let $ = require('jquery');
  const request = require('request');
  const moment = require('moment');
+const app = express();
  
  
  router.get('/', function(req, res, next){
@@ -164,7 +165,10 @@
  
  router.post('/create_payment_url', function (req, res, next) {
      
-     process.env.TZ = 'Asia/Ho_Chi_Minh';
+    try{
+
+    process.env.TZ = 'Asia/Ho_Chi_Minh';
+     console.log(req.body.amount);
      
      let date = new Date();
      let createDate = moment(date).format('YYYYMMDDHHmmss');
@@ -190,7 +194,7 @@
  
      
      let amount = req.body.amount;
-     let bankCode = req.body.bankCode;   
+     let bankCode = '';   
      
      let locale =  'vn';
      // let locale = req.body.language;
@@ -228,7 +232,12 @@
      console.log('vnpurl', vnpUrl);
  
     //  res.redirect(vnpUrl)
-    res.status(200).json({ paymentUrl: vnpUrl });
+    return res.status(200).json({ 
+        success: true ,
+        paymentUrl: vnpUrl });
+    }catch(err){
+        next(err);
+    }
 
  });
  
@@ -459,6 +468,45 @@
      }
      return sorted;
  }
+
+
+ router.get('/order/vnpay_return', (req, res) => {
+    const params = req.query;
+
+    // Lấy hash từ VNPay
+    const secureHash = params['vnp_SecureHash'];
+
+    // Loại bỏ 'vnp_SecureHash' để tạo lại hash và so sánh
+    delete params['vnp_SecureHash'];
+    const sortedParams = Object.keys(params).sort().reduce((acc, key) => {
+        acc[key] = params[key];
+        return acc;
+    }, {});
+
+    const queryString = Object.keys(sortedParams)
+        .map(key => `${key}=${sortedParams[key]}`)
+        .join('&');
+
+    // Kiểm tra chữ ký
+    const crypto = require('crypto');
+    const hash = crypto
+        .createHmac('sha512', 'ZQ7TLH09CYXIDYZII39K1BMWQH6LGGPQ')
+        .update(queryString)
+        .digest('hex');
+
+    if (hash === secureHash) {
+        // Giao dịch hợp lệ
+        if (params['vnp_ResponseCode'] === '00') {
+            res.send('Giao dịch thành công');
+        } else {
+            res.send('Giao dịch thất bại');
+        }
+    } else {
+        // Chữ ký không hợp lệ
+        res.status(400).send('Chữ ký không hợp lệ');
+    }
+});
+
  
  module.exports = router;
  

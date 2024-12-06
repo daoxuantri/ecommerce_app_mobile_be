@@ -382,39 +382,40 @@ exports.listallproduct = async (req, res, next) => {
     try {
         const productId = req.params.id;
 
-        const product = await Product.find({_id: productId, status : true}).exec();
-        
+        // Lấy thông tin sản phẩm gốc
+        const product = await Product.findById(productId).exec();
+
         if (!product) {
             return res.status(404).send({
-                success: false , 
+                success: false,
                 message: "Không tìm thấy sản phẩm",
-            })
+            });
         }
 
-        //find Related Products
-        const query = {
-        _id: { $ne: productId },
-        $or: [
-            { category: product.category }, 
-            { brand: product.brand }
-        ],
-        };
-
-        // Nếu cần lọc theo từ khóa tên (keyname)
-        if (product.name) {
-        query.$or.push({ name: { $regex: product.name, $options: "i" } });
-        }
-
-        // Thực hiện truy vấn để lấy danh sách sản phẩm liên quan
-        const relatedProducts = await Product.find(query)
-        .limit(10)  // Giới hạn số lượng sản phẩm liên quan
-        .exec();
-
-        return res.status(201).send({
-            success: true , 
-            message: "Thành công",
-            data: relatedProducts
+        // Truy vấn tìm sản phẩm liên quan theo danh mục
+        const relatedProducts = await Product.find({
+            _id: { $ne: productId }, // Loại trừ sản phẩm hiện tại
+            category: product.category, // Cùng danh mục
+            status: true, // Chỉ lấy sản phẩm đang hoạt động
         })
+            .limit(10) // Giới hạn số lượng sản phẩm
+            .select("name images category brand description rating sold") // Chỉ lấy các trường cần thiết
+            .exec();
+
+        // Kiểm tra nếu không có sản phẩm liên quan
+        if (!relatedProducts || relatedProducts.length === 0) {
+            return res.status(200).send({
+                success: true,
+                message: "Không tìm thấy sản phẩm liên quan",
+                data: [],
+            });
+        }
+
+        return res.status(200).send({
+            success: true,
+            message: "Thành công",
+            data: relatedProducts,
+        });
     } catch (err) {
         next(err);
     }
