@@ -102,17 +102,30 @@ exports.getaddressdefault = async (req, res, next) => {
   }
 };
 
-exports.deleteAddress = async (req, res, next) => {
-    const addressId = req.params.id;
-    try {
-      const deletedAddress = await Address.findByIdAndDelete(addressId);
-  
-      if (!deletedAddress) {
-        return res.status(404).json({ message: 'Không tìm thấy địa chỉ' });
-      }
-  
-      res.status(200).json({ message: 'Xóa địa chỉ thành công.', deletedAddress });
-    } catch (error) {
-      next(error);
+exports.deleteLocation = async (req, res, next) => {
+  const userId = req.params.userId; // Lấy userId từ params
+  const locationId = req.params.locationId; // Lấy locationId từ params
+
+  try {
+    // Tìm Address của user và xóa location có locationId
+    const updatedAddress = await Address.findOneAndUpdate(
+      { user: userId, "location._id": locationId },  // Tìm Address theo userId và locationId
+      {
+        $pull: { location: { _id: locationId } }  // Xóa location với locationId
+      },
+      { new: true }  // Trả về tài liệu đã được cập nhật
+    );
+
+    if (!updatedAddress) {
+      return res.status(404).json({ message: 'Không tìm thấy địa chỉ hoặc location không tồn tại' });
     }
+
+    res.status(200).json({
+      message: 'Xóa location thành công.',
+      updatedAddress,
+    });
+  } catch (error) {
+    next(error);
+  }
 };
+
