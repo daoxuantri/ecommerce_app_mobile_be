@@ -100,7 +100,7 @@ exports.createreview = async (req, res, next) => {
 
 exports.getallreview = async (req, res, next) => {
   try {
-    const { productId } = req.body;
+    const { productId } = req.params;
 
     // Tìm tất cả các đánh giá liên quan đến sản phẩm
     const reviews = await Review.find({ parentProduct: productId })
