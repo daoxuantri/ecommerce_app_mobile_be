@@ -29,7 +29,16 @@ exports.createaddress = async (req, res, next) => {
         data: savedAddress,
       });
     } else {
-      // Nếu đã có, thêm địa chỉ mới vào danh sách
+      // Nếu đã có địa chỉ, kiểm tra nếu `status === true`
+      if (status === true) {
+        // Cập nhật tất cả các địa chỉ hiện tại thành `status: false`
+        userAddress.location = userAddress.location.map((loc) => ({
+          ...loc.toObject(), // Chuyển document sang object để thao tác
+          status: false, // Đặt tất cả các status hiện tại thành false
+        }));
+      }
+
+      // Thêm địa chỉ mới
       userAddress.location.push({
         address: address,
         status: status || false,
@@ -115,4 +124,35 @@ exports.deleteAddress = async (req, res, next) => {
     } catch (error) {
       next(error);
     }
+};
+
+
+exports.updateDefaultAddress = async (req, res, next) => {
+  const { userId, addressId } = req.body;
+
+  try {
+    // Tìm địa chỉ của người dùng
+    const userAddress = await Address.findOne({ user: userId });
+
+    if (!userAddress) {
+      return res.status(404).json({ message: "Không tìm thấy danh sách địa chỉ của người dùng" });
+    }
+
+    // Cập nhật trạng thái của tất cả địa chỉ thành `false`
+    userAddress.location = userAddress.location.map((loc) => ({
+      ...loc.toObject(), // Chuyển document sang object
+      status: loc._id.toString() === addressId ? true : false, // Đặt `true` cho địa chỉ được chọn, còn lại là `false`
+    }));
+
+    // Lưu thay đổi
+    const updatedAddress = await userAddress.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Cập nhật địa chỉ mặc định thành công.",
+      data: updatedAddress,
+    });
+  } catch (error) {
+    next(error);
+  }
 };
