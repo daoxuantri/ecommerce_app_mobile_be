@@ -2,10 +2,9 @@ const addressController = require("../controllers/address.controller");
 const express = require("express");
 const router = express.Router();
 
-
+router.put("/", addressController.updateDefaultAddress);
 router.post("/create",  addressController.createaddress);
 router.get("/:idUser",  addressController.getalladdressbyuser);
 router.get("/:idUser/getdefault",  addressController.getaddressdefault);
-router.delete("/:id", addressController.deleteAddress);
-router.put("/", addressController.updateDefaultAddress);
+router.delete("/user/:userId/location/:locationId", addressController.deleteLocation);
 module.exports = router;    
