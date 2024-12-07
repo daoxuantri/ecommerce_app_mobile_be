@@ -254,7 +254,6 @@ exports.getproductbyid = async (req, res, next) => {
     return next(err);
   }
 };
-
 exports.getall = async (req, res, next) => {
   try {
     // Lấy tất cả các category với _id và name
