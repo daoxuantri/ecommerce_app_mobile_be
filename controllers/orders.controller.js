@@ -3,9 +3,16 @@ const Cart = require("../models/carts");
 
 
 exports.createorder = async (req, res, next) => {
-    const { user, productItem, address} = req.body;
+    const { user, productItem, informationUser} = req.body;
 
     try {
+        // Kiểm tra dữ liệu đầu vào
+        if (!user || !productItem || !informationUser) {
+            return res.status(404).json({
+                success: false, 
+                message: "Kiểm tra lại đầy đủ thông tin"
+            })
+        }
         // Tính tổng tiền của đơn hàng
         const totalOrder = productItem.reduce((acc, cur) => acc + cur.price * cur.quantity, 0);
 
@@ -22,7 +29,11 @@ exports.createorder = async (req, res, next) => {
             user: user,
             productItem: validatedProductItems,
             total: totalOrder,
-            address: address,
+            infomationUser: {
+                address: informationUser.address,
+                phone: informationUser.phone,
+                name: informationUser.name,
+            },
         });
 
         // Lưu đơn hàng vào database
