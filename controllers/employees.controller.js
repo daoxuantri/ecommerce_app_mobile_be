@@ -300,25 +300,28 @@ exports.getAllBrand = async (req, res, next) => {
 // };
 
 exports.createProduct = async (req, res, next) => {
+  let savedProduct = null;
+  let savedSpecs = null;
   try {
     const { name, category, brand, description, images, status } = req.body;
     const specifications = JSON.parse(req.body.specifications || "[]"); // Parse specifications từ JSON string
     const memoryVariants = JSON.parse(req.body.memoryVariants || "[]"); // Parse memoryVariants từ JSON string
-
+    // Lấy link ảnh từ Cloudinary (đã upload trước đó)
+    req.body.images = req.files.map((file) => file.path);
     console.log(JSON.stringify(specifications));
     console.log(JSON.stringify(memoryVariants));
 
     // Step 1: Create the product
     const newProduct = new Product({
       name,
-      images,
+      images: req.body.images,
       category,
       brand,
       status,
       description,
     });
 
-    const savedProduct = await newProduct.save();
+    savedProduct = await newProduct.save();
     if (!savedProduct) {
       return res.status(400).json({
         success: false,
@@ -327,37 +330,19 @@ exports.createProduct = async (req, res, next) => {
     }
 
     // Step 2: Add specifications
-
     const productDetails = new Specifications({
       productId: savedProduct._id,
       specifications,
     });
-    await productDetails.save();
+    savedSpecs = await productDetails.save();
 
     // Step 3: Add variants
-
     for (const memoryVariant of memoryVariants) {
-      const { memory, variants } = memoryVariant;
-      if (variants && variants.length > 0) {
-        const formattedVariants = variants.map((variant) => ({
-          color: variant.color,
-          price: {
-            initial: variant.price.initial,
-            discount: variant.price.discount || null,
-          },
-          stockQuantity: variant.stockQuantity,
-        }));
-
-        const newVariant = new VariantProduct({
-          product: savedProduct._id,
-          memory: memory || null,
-          variants: formattedVariants,
-        });
-
-        await newVariant.save();
-      } else {
-        console.log("No variants available for memory:", memory);
-      }
+      const newVariant = new VariantProduct({
+        product: savedProduct._id,
+        ...memoryVariant,
+      });
+      await newVariant.save();
     }
 
     return res.status(201).json({
@@ -367,6 +352,13 @@ exports.createProduct = async (req, res, next) => {
     });
   } catch (error) {
     console.error("Lỗi trong quá trình tạo sản phẩm:", error);
+    // Rollback nếu có lỗi xảy ra
+    if (savedProduct) {
+      await Product.findByIdAndDelete(savedProduct._id);
+    }
+    if (savedSpecs) {
+      await Specifications.findByIdAndDelete(savedSpecs._id);
+    }
     next(error);
   }
 };

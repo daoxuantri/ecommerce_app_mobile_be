@@ -71,7 +71,7 @@ exports.getallcategories = async (req, res, next) => {
 exports.getcatebyid = async (req, res, next) => {
   try {
     const _id = req.params.id;
-    const foundId = await Category.find({_id : _id , status : true});
+    const foundId = await Category.findOne({_id : _id , status : true});
 
     if (foundId.length == 0 ) {
       return res.status(404).send({

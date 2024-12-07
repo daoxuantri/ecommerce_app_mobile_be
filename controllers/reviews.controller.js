@@ -111,7 +111,7 @@ exports.getallreview = async (req, res, next) => {
     return res.status(200).json({
       success: true,
       data: reviews.map((review) => ({
-        email: review.owner.email,
+        email: review.owner?.email || null, 
         rating: review.rating,
         content: review.content,
         productId: review.parentProduct,
