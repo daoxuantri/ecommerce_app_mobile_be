@@ -261,13 +261,76 @@ const app = express();
      let hmac = crypto.createHmac("sha512", secretKey);
      let signed = hmac.update( Buffer.from(signData, 'utf-8')).digest("hex");     
  
-     if(secureHash === signed){
-         //Kiem tra xem du lieu trong db co hop le hay khong va thong bao ket qua
+    //  if(secureHash === signed){
+    //      //Kiem tra xem du lieu trong db co hop le hay khong va thong bao ket qua
  
-         res.render('success', {code: vnp_Params['vnp_ResponseCode']})
-     } else{
-         res.render('success', {code: '97'})
-     }
+    //     res.render('success', {code: vnp_Params['vnp_ResponseCode']})
+    //  } else{
+    //      res.render('success', {code: '97'})
+    //  }
+
+
+    //mau tn1
+    //  if (secureHash === signed) {
+    //     // Tạo dữ liệu phản hồi
+    //     let responseData = {
+    //         vnp_Amount: `${parseInt(vnp_Params['vnp_Amount'], 10) / 100} VND`, // Chia cho 100 để có số tiền thực
+    //         vnp_BankCode: vnp_Params['vnp_BankCode'],
+    //         vnp_CardType: vnp_Params['vnp_CardType'],
+    //         vnp_OrderInfo: decodeURIComponent(vnp_Params['vnp_OrderInfo']),
+    //         vnp_PayDate: `${vnp_Params['vnp_PayDate'].slice(0, 4)}-${vnp_Params['vnp_PayDate'].slice(4, 6)}-${vnp_Params['vnp_PayDate'].slice(6, 8)} ${vnp_Params['vnp_PayDate'].slice(8, 10)}:${vnp_Params['vnp_PayDate'].slice(10, 12)}:${vnp_Params['vnp_PayDate'].slice(12, 14)}`,
+    //         vnp_ResponseCode: vnp_Params['vnp_ResponseCode']
+    //     }
+    //     return res.json(responseData);
+    // }else{
+    //     return res.json({ error: 'Invalid signature', code: '97' })
+    // }
+
+    //mau tn2
+    if (secureHash === signed) {
+        // Kiểm tra trạng thái giao dịch
+        const isTransactionSuccess =
+            vnp_Params['vnp_ResponseCode'] === '00' &&
+            vnp_Params['vnp_TransactionStatus'] === '00';
+    
+        if (isTransactionSuccess) {
+            // Giao dịch thành công
+            res.json({
+                success: true,
+                message: "Transaction verified successfully",
+                vnp_Amount: `${parseInt(vnp_Params['vnp_Amount'], 10) / 100} VND`,
+                vnp_BankCode: vnp_Params['vnp_BankCode'],
+                vnp_CardType: vnp_Params['vnp_CardType'],
+                vnp_OrderInfo: decodeURIComponent(vnp_Params['vnp_OrderInfo']),
+                vnp_PayDate: `${vnp_Params['vnp_PayDate'].slice(0, 4)}-${vnp_Params['vnp_PayDate'].slice(4, 6)}-${vnp_Params['vnp_PayDate'].slice(6, 8)} ${vnp_Params['vnp_PayDate'].slice(8, 10)}:${vnp_Params['vnp_PayDate'].slice(10, 12)}:${vnp_Params['vnp_PayDate'].slice(12, 14)}`,
+                vnp_ResponseCode: vnp_Params['vnp_ResponseCode'],
+                vnp_TxnRef: vnp_Params['vnp_TxnRef'],
+                vnp_TransactionStatus: vnp_Params['vnp_TransactionStatus']
+            });
+        } else {
+            // Giao dịch thất bại hoặc bị hủy
+            res.json({
+                success: false,
+                message: `Transaction failed with response code ${vnp_Params['vnp_ResponseCode']}`,
+                vnp_Amount: `${parseInt(vnp_Params['vnp_Amount'], 10) / 100} VND`,
+                vnp_BankCode: vnp_Params['vnp_BankCode'],
+                vnp_CardType: vnp_Params['vnp_CardType'],
+                vnp_OrderInfo: decodeURIComponent(vnp_Params['vnp_OrderInfo']),
+                vnp_PayDate: `${vnp_Params['vnp_PayDate'].slice(0, 4)}-${vnp_Params['vnp_PayDate'].slice(4, 6)}-${vnp_Params['vnp_PayDate'].slice(6, 8)} ${vnp_Params['vnp_PayDate'].slice(8, 10)}:${vnp_Params['vnp_PayDate'].slice(10, 12)}:${vnp_Params['vnp_PayDate'].slice(12, 14)}`,
+                vnp_ResponseCode: vnp_Params['vnp_ResponseCode'],
+                vnp_TxnRef: vnp_Params['vnp_TxnRef'],
+                vnp_TransactionStatus: vnp_Params['vnp_TransactionStatus']
+            });
+        }
+    } else {
+        // Chữ ký không hợp lệ
+        res.json({
+            success: false,
+            message: "Invalid transaction signature",
+            code: '97'
+        });
+    }
+    
  });
  
  router.get('/vnpay_ipn', function (req, res, next) {
