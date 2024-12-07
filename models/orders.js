@@ -32,6 +32,11 @@ const orderSchema = new Schema(
             enum: orderStatus,
             default: 'PROGRESS'
         },
+        infomationUser: {
+            address: { type: String, required: true }, 
+            phone: { type: String, required: true }, 
+            name: { type: String, required: true } 
+        },
         total: {
             type: Number,
             required: true,
