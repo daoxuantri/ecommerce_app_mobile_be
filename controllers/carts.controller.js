@@ -181,7 +181,7 @@ exports.addproduct = async (req, res, next) => {
             message: "Cập nhật giỏ hàng thành công",
             cart: {
                 total: findCart.total,
-                productItem: findCart.productItem.map(({ product, name, quantity, images, price, memory, color }) => ({
+                productItem: findCart.productItem.map(({ product, name, quantity, images, price, memory, color ,  _id}) => ({
                     product,
                     name,
                     quantity,
@@ -189,6 +189,7 @@ exports.addproduct = async (req, res, next) => {
                     price,
                     memory,
                     color,
+                    _id
                 })),
             },
         });

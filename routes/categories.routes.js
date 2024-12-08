@@ -18,6 +18,10 @@ router.delete("/:id",auth.verifyTokenAndAdmin, categoryController.deletecategory
 //get all product (category)
 router.get("/:id/products",  categoryController.getallproduct);
 
+
+//dung cho flutter
+router.get("/:id/productsflutter",  categoryController.getallproductflutter);
+
 //get filter options for category
 router.get("/:id/filters", categoryController.getFilterOptions);
 
