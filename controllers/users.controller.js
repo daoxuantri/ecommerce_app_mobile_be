@@ -1,6 +1,7 @@
 const bcryptjs =require("bcryptjs");
 const User = require("../models/users");
 const Cart = require("../models/carts");
+const Order = require("../models/orders")
 const auth = require("../middlewares/auth");
 
 
@@ -155,26 +156,68 @@ exports.resetpass = async (req, res, next) => {
     }
 };
 
+// exports.getuserbyid = async (req, res, next) => {
+//     try {
+//         const _id = req.params.id;
+//         const foundId = await User.findById(_id).select('-status');
+
+//         if(!foundId){
+//             return res.status(404).send({
+//                 success: false,
+//                 message: "Không tìm thấy user"
+//             })
+//         }
+//         return res.status(201).send({
+//             success: true,
+//             message: "Thành công",
+//             data: foundId
+//         })
+//     } catch (err) {
+//         return next(err);
+//     }
+// };
+
+
 exports.getuserbyid = async (req, res, next) => {
     try {
         const _id = req.params.id;
-        const foundId = await User.findById(_id).select('-status');
+        const foundId = await User.findById(_id);
 
-        if(!foundId){
+        if (!foundId) {
             return res.status(404).send({
                 success: false,
                 message: "Không tìm thấy user"
-            })
+            });
         }
-        return res.status(201).send({
+
+        // Tìm giỏ hàng của user
+        const cart = await Cart.findOne({ user: _id });
+        const cartTotalItems = cart ? cart.productItem.length : 0;
+
+        // Tìm các đơn hàng của user
+        const orders = await Order.find({ user: _id, orderStatus: { $in: ['PROGRESS', 'COMPLETED'] } });
+        const ordersTotalItems = orders.length;
+
+        return res.status(200).send({
             success: true,
             message: "Thành công",
-            data: foundId
-        })
+            data: {
+                username: foundId.username,
+                email: foundId.email,
+                images: foundId.images,
+                bonuspoint: foundId.bonuspoint,
+                status: foundId.status,
+                id: foundId._id,
+                cartTotalItems,
+                ordersTotalItems
+            }
+        });
     } catch (err) {
         return next(err);
     }
 };
+
+
 
 //lay tat ca san pham gio hang cho users
 exports.getcartbyuser = async (req, res, next) => {

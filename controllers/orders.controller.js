@@ -94,11 +94,20 @@ exports.createorder = async (req, res, next) => {
 exports.getallorder = async (req, res, next) => {
     try {
         const iduser = req.params.iduser;
-        const findAllOrder = await Order.find({user: iduser}).select('-createdAt -updatedAt -__v ');
+        const { status } = req.query; // Lấy trạng thái từ query parameters
 
-        return res.status(201).json({
+        // Tạo điều kiện lọc
+        const filter = { user: iduser };
+        if (status) {
+            filter.orderStatus = status; // Thêm điều kiện nếu có trạng thái
+        }
+
+        // Tìm tất cả các đơn hàng theo điều kiện
+        const findAllOrder = await Order.find(filter).select('-createdAt -updatedAt -__v');
+
+        return res.status(200).json({
             success: true,
-            message: "Tất cả các đơn hàng",
+            message: "Danh sách đơn hàng",
             order: findAllOrder,
         });
     } catch (error) {
@@ -260,4 +269,117 @@ exports.deleteorder = async (req, res, next) => {
         next(error);
     }
 };
+
+
+exports.statisticProduct = async (req, res, next) => {
+    try {
+        const orderStatuses = ['PROGRESS', 'COMPLETED', 'CANCELED'];
+
+        const orderStatistics = await Order.aggregate([
+            {
+                $group: {
+                    _id: "$orderStatus",
+                    count: { $sum: 1 },
+                    totalAmount: { $sum: "$total" },
+                },
+            },
+            {
+                $addFields: {
+                    orderStatus: "$_id"
+                },
+            },
+            {
+                $project: {
+                    _id: 0,
+                    orderStatus: 1,
+                    count: 1,
+                    totalAmount: 1,
+                },
+            },
+        ]);
+
+        const completeStatistics = orderStatuses.map((status) => {
+            const stat = orderStatistics.find((s) => s.orderStatus === status);
+            return {
+                orderStatus: status,
+                count: stat ? stat.count : 0,
+                totalAmount: stat ? stat.totalAmount : 0,
+            };
+        });
+
+        const completedOrders = await Order.find({ orderStatus: 'COMPLETED' });
+
+        const productSales = {};
+
+        completedOrders.forEach((order) => {
+            order.productItem.forEach((item) => {
+                const productId = item.product.toString();
+                if (!productSales[productId]) {
+                    productSales[productId] = {
+                        name: item.name,
+                        quantity: 0,
+                        productId: productId,
+                        images: item.images,
+                    };
+                }
+                productSales[productId].quantity += item.quantity;
+            });
+        });
+
+        const sortedProducts = Object.values(productSales).sort(
+            (a, b) => b.quantity - a.quantity
+        );
+
+        const top10Products = sortedProducts.slice(0, 10);
+
+        const topUsers = await Order.aggregate([
+            {
+                $group: {
+                    _id: "$user",
+                    totalSpent: { $sum: "$total" },
+                },
+            },
+            {
+                $sort: { totalSpent: -1 },
+            },
+            {
+                $limit: 10,
+            },
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "_id",
+                    foreignField: "_id",
+                    as: "userDetails",
+                },
+            },
+            {
+                $unwind: "$userDetails",
+            },
+            {
+                $project: {
+                    _id: 0,
+                    userId: "$_id",
+                    email: "$userDetails.email",
+                    username: "$userDetails.username",
+                    totalSpent: 1,
+                },
+            },
+        ]);
+
+        return res.status(200).json({
+            success: true,
+            message: "Thống kê sản phẩm, trạng thái đơn hàng và người dùng",
+            data: {
+                topProducts: top10Products,
+                orderStatistics: completeStatistics,
+                topUsers: topUsers,
+            },
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+
 
