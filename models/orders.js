@@ -1,8 +1,6 @@
 const mongoose = require("mongoose");
 const {Schema} = mongoose;
 
-
-
 const orderStatus = ['PROGRESS','COMPLETED',  'CANCELED'];
 const orderSchema = new Schema(
     {

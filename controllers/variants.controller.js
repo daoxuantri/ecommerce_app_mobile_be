@@ -56,128 +56,38 @@ exports.createvariant = async (req, res, next) => {
     }
 };
 
+exports.updateVariants = async (req, res) => {
+    try {
+        const { productId ,variantId, variantIndex } = req.params;
+        const variantData = req.body;
 
-// //update 
-// exports.updatebanner = async (req, res, next) => {
-//     try { 
+        // Tìm variant document
+        const variantDoc = await VariantProduct.findById(variantId);
 
-//         const {idbanner, name, description} = req.body;
+        if (!variantDoc) {
+            return res.status(404).json({
+                success: false,
+                message: 'Không tìm thấy variant'
+            });
+        }
 
-//         let updateFields = {}; 
-//         // Kiểm tra và chỉ thêm các trường có trong yêu cầu
-//         if (name) updateFields.name = name; 
-//         if (description) updateFields.description = description; 
-        
-//         // Kiểm tra có file ảnh để cập nhật không
-//         if (req.files && req.files.length > 0) {
-//             updateFields.images = req.files.map((file) => file.path);
-//         }
+        // Cập nhật variant tại index cụ thể
+        variantDoc.variants[variantIndex] = {
+            ...variantDoc.variants[variantIndex],
+            ...variantData
+        };
 
-//         //timkiem
-//         const existBanner = await Banner.findOne({_id : idbanner});
+        await variantDoc.save();
 
-//         if (existBanner) {
-//             const updateBanner = await Banner.findByIdAndUpdate(
-//                 existBanner._id,
-//                 { $set: updateFields },
-//                 { new: true }
-//             );
-//             return res.status(200).json({
-//                 success: true,
-//                 message: "Cập nhật quảng cáo thành công ",
-//                 data: updateBanner
-//             });
-//         }else{
-//             return res.status(404).json({
-//                 success: false,
-//                 message: "Không tìm thấy quảng cáo"
-//             });
-//         }
-//     } catch (err) {
-//         next(err);
-//     }
-// };
-
-
-// exports.getallbanner = async (req, res, next) => {
-//     try {
-        
-//         const listBanner = await Banner.find().select('-__v -createdAt -updatedAt');
-        
-//         return res.status(200).send({
-//             success: true,
-//             message: "Thành công",
-//             data: listBanner,
-//         });
-//     } catch (err) {
-//         next(err);
-//     }
-// };
-// exports.getbannerbyid = async (req, res, next) => {
-//     try {
-//         const _id = req.params.id;
-//         const foundId = await Banner.findById(_id);
-
-//         if(!foundId){
-//             return res.status(404).send({
-//                 success: false,
-//                 message: "Không tìm thấy Banner"
-//             })
-//         }
-//         return res.status(201).send({
-//             success: true,
-//             message: "Thành công",
-//             data: foundId
-//         })
-//     } catch (err) {
-//         return next(err);
-//     }
-// };
-
- 
-
-// //delete
-// exports.deletebanner = async (req, res, next) => {
-//     try {
-//         const bannerId = req.params.id;
-//         const bannerInfo = await Banner.findById(bannerId);
-
-//         if (!bannerInfo) { 
-//             return res.status(404).send({
-//                 success: false,
-//                 message: 'Banner không tồn tại!'});  
-//         }
-//         //Xóa banner
-//         const deletebanner = await Banner.findByIdAndDelete(bannerId);
-
-//          return res.status(200).send({
-//             success: true,
-//             message: 'Xóa banner thành công!'});
-       
-//     } catch (err) {
-//         next(err);
-//     }
-// };
-
-
-// exports.home = async (req, res, next) => {
-//     try {
-//         const bannerId = req.params.id;
-//         const bannerInfo = await Banner.findById(bannerId);
-
-//         if (!bannerInfo) { 
-//             return res.status(404).send({
-//                 success: false,
-//                 message: 'Banner không tồn tại!'});  
-//         }
-//         //Xóa banner
-//         const deletebanner = await Banner.findByIdAndDelete(bannerId);
-
-//          return res.status(200).send({
-//             success: true,
-//             message: 'Xóa banner thành công!'});
-       
-//     } catch (err) {
-//         next(err);
-//     }
-// };
+        res.status(200).json({
+            success: true,
+            data: variantDoc
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Lỗi cập nhật variant',
+            error: error.message
+        });
+    }
+};

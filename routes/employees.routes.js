@@ -22,6 +22,8 @@ router.post("/products", uploadCloud.array('images'),employeeController.createPr
 router.get("/brands", employeeController.getBrands);
 router.get("/categories", employeeController.getCategories);
 router.get("/users", employeeController.getUsers);
+router.get("/staffs", employeeController.getEmployees);
+router.get("/orders", employeeController.getOrders);
 //resetpass-employee
 router.post("/getempbyid/:id",employeeController.getempbyid);
 router.get("/resetpass",employeeController.resetpass);
