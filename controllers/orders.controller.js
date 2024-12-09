@@ -3,16 +3,17 @@ const Cart = require("../models/carts");
 
 
 exports.createorder = async (req, res, next) => {
-    const { user, productItem, informationUser} = req.body;
+    const { user, productItem, informationUser, paid } = req.body;
 
     try {
         // Kiểm tra dữ liệu đầu vào
         if (!user || !productItem || !informationUser) {
             return res.status(404).json({
-                success: false, 
+                success: false,
                 message: "Kiểm tra lại đầy đủ thông tin"
-            })
+            });
         }
+
         // Tính tổng tiền của đơn hàng
         const totalOrder = productItem.reduce((acc, cur) => acc + cur.price * cur.quantity, 0);
 
@@ -24,6 +25,9 @@ exports.createorder = async (req, res, next) => {
             return item;
         });
 
+        // Kiểm tra và gán giá trị cho `paid`
+        const isPaid = typeof paid === 'boolean' ? paid : false;
+
         // Tạo đơn hàng mới
         const newOrder = new Order({
             user: user,
@@ -34,6 +38,7 @@ exports.createorder = async (req, res, next) => {
                 phone: informationUser.phone,
                 name: informationUser.name,
             },
+            paid: isPaid, // Gán giá trị paid từ req.body
         });
 
         // Lưu đơn hàng vào database
