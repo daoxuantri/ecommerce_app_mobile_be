@@ -40,7 +40,7 @@ app.use("/employees", require("./routes/employees.routes"));
 
 app.use("/carts", require("./routes/carts.routes"));
 
-// app.use("/bills", require("./routes/bills.routes"));
+app.use("/bills", require("./routes/bills.routes"));
 app.use("/orders", require("./routes/orders.routes"));
 
 

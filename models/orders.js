@@ -1,7 +1,9 @@
 const mongoose = require("mongoose");
 const {Schema} = mongoose;
 
-const orderStatus = ['PROGRESS','COMPLETED',  'CANCELED'];
+
+
+const orderStatus = ['PROGRESS','DELIVERY', 'COMPLETED', 'CANCELED'];
 const orderSchema = new Schema(
     {
         user: {
@@ -34,6 +36,10 @@ const orderSchema = new Schema(
             address: { type: String, required: true }, 
             phone: { type: String, required: true }, 
             name: { type: String, required: true } 
+        },
+        paid: {
+            type: Boolean, 
+            default : false
         },
         total: {
             type: Number,

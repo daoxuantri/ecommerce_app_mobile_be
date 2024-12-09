@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 const {Schema} = mongoose;
 
 
-const paymentMethods = ['PAYPAL', 'COD'];
+const paymentMethods = ['VNPAY', 'COD'];
 const billSchema = new Schema ({
     order: {
         type: mongoose.Schema.Types.ObjectId,
