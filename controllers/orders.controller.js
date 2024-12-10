@@ -1,14 +1,15 @@
 const Order = require("../models/orders"); 
 const Cart = require("../models/carts"); 
+const Bill = require("../models/bills"); 
 
 
 exports.createorder = async (req, res, next) => {
-    const { user, productItem, informationUser, paid } = req.body;
+    const { user, productItem, informationUser, paid, billCode } = req.body;
 
     try {
         // Kiểm tra dữ liệu đầu vào
         if (!user || !productItem || !informationUser) {
-            return res.status(404).json({
+            return res.status(400).json({
                 success: false,
                 message: "Kiểm tra lại đầy đủ thông tin"
             });
@@ -25,9 +26,6 @@ exports.createorder = async (req, res, next) => {
             return item;
         });
 
-        // Kiểm tra và gán giá trị cho `paid`
-        const isPaid = typeof paid === 'boolean' ? paid : false;
-
         // Tạo đơn hàng mới
         const newOrder = new Order({
             user: user,
@@ -38,11 +36,24 @@ exports.createorder = async (req, res, next) => {
                 phone: informationUser.phone,
                 name: informationUser.name,
             },
-            paid: isPaid, // Gán giá trị paid từ req.body
+            paid: paid,
+            billCode: billCode || null,
         });
 
         // Lưu đơn hàng vào database
         await newOrder.save();
+
+        // Nếu `billCode` không phải `'COD'` và `paid` là `true`, tạo `Bill`
+        if (billCode !== 'COD' && paid === true) {
+            const newBill = new Bill({
+                order: newOrder._id,
+                billCode: billCode, // Gán billCode từ request
+                total: totalOrder,
+                paymentMethod: 'VNPAY', // Dựa trên paid: true
+            });
+
+            await newBill.save();
+        }
 
         // Tìm giỏ hàng của người dùng
         const findCart = await Cart.findOne({ user: user });
@@ -50,7 +61,7 @@ exports.createorder = async (req, res, next) => {
             throw new Error("Cart not found for the user");
         }
 
-        // Cập nhật giỏ hàng: Loại bỏ sản phẩm trong giỏ dựa trên `product`, `color`, và `memory`
+        // Cập nhật giỏ hàng: Loại bỏ sản phẩm đã đặt
         const productIdsWithDetails = validatedProductItems.map((item) => ({
             product: item.product,
             color: item.color,
@@ -74,7 +85,7 @@ exports.createorder = async (req, res, next) => {
         );
 
         if (updatedCart) {
-            // Tính tổng mới cho giỏ hàng sau khi xóa các sản phẩm đã đặt hàng
+            // Tính lại tổng tiền trong giỏ hàng sau khi xóa sản phẩm đã đặt
             const newTotal = updatedCart.productItem.reduce(
                 (acc, cur) => acc + cur.price * cur.quantity,
                 0
@@ -86,13 +97,16 @@ exports.createorder = async (req, res, next) => {
         // Phản hồi thành công
         return res.status(201).json({
             success: true,
-            message: "Order created and cart updated successfully",
+            message: "Order created successfully",
             order: newOrder,
         });
     } catch (error) {
         next(error);
     }
 };
+
+
+
 
 
 

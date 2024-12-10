@@ -10,7 +10,7 @@ exports.setStatusOrder = async (req, res, next) => {
         if (!orderId || !status) {
             return res.status(400).json({
                 success: false,
-                message: "Thiếu thông tin orderId hoặc status"
+                message: "Thiếu thông tin orderId hoặc status",
             });
         }
 
@@ -19,32 +19,37 @@ exports.setStatusOrder = async (req, res, next) => {
         if (!order) {
             return res.status(404).json({
                 success: false,
-                message: "Không tìm thấy đơn hàng"
+                message: "Không tìm thấy đơn hàng",
             });
         }
 
-        // Kiểm tra nếu trạng thái đã là COMPLETED mà đã có bill thì không xử lý tiếp
+        // Kiểm tra nếu trạng thái là "COMPLETED"
         if (status === "COMPLETED") {
+            // Nếu đơn hàng đã thanh toán VNPay, chỉ cập nhật trạng thái
+            if (order.paid) {
+                order.orderStatus = status;
+                await order.save();
+
+                return res.status(200).json({
+                    success: true,
+                    message: "Cập nhật trạng thái đơn hàng thành công (VNPay)",
+                    order,
+                });
+            }
+
+            // Nếu chưa thanh toán hoặc chưa có hóa đơn, kiểm tra và tạo hóa đơn
             const existingBill = await Bill.findOne({ order: orderId });
             if (existingBill) {
                 return res.status(400).json({
                     success: false,
                     message: "Đơn hàng này đã được lập hóa đơn trước đó",
-                    bill: existingBill
+                    bill: existingBill,
                 });
             }
-        }
-
-        // Cập nhật trạng thái đơn hàng
-        order.orderStatus = status;
-        await order.save();
-
-        // Nếu trạng thái là COMPLETED, tạo bill
-        if (status === "COMPLETED") {
-            const paymentMethod = order.paid ? "VNPAY" : "COD";
 
             // Tạo mã hóa đơn (billCode)
             const billCode = `BILL-${Date.now()}`;
+            const paymentMethod = order.paid ? "VNPAY" : "COD";
 
             const newBill = new Bill({
                 order: order._id,
@@ -53,18 +58,25 @@ exports.setStatusOrder = async (req, res, next) => {
                 paymentMethod: paymentMethod,
             });
 
-            // Lưu bill vào database
+            // Lưu hóa đơn vào database
             await newBill.save();
+
+            // Cập nhật trạng thái đơn hàng
+            order.orderStatus = status;
+            await order.save();
 
             return res.status(200).json({
                 success: true,
-                message: "Cập nhật trạng thái đơn hàng và tạo bill thành công",
+                message: "Cập nhật trạng thái đơn hàng và tạo hóa đơn thành công",
                 order,
                 bill: newBill,
             });
         }
 
-        // Phản hồi khi chỉ cập nhật trạng thái
+        // Cập nhật trạng thái khác ngoài "COMPLETED"
+        order.orderStatus = status;
+        await order.save();
+
         return res.status(200).json({
             success: true,
             message: "Cập nhật trạng thái đơn hàng thành công",

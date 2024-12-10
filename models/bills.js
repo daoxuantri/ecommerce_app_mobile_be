@@ -11,7 +11,6 @@ const billSchema = new Schema ({
     },
     billCode: {
         type: String ,
-        trim: true
     },
     total:{
         type : Number, 
