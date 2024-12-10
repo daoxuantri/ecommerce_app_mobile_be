@@ -592,65 +592,19 @@ exports.searchProduct = async (req, res, next) => {
   }
 };
 
-// exports.sort = async (req, res, next) => {
-//     try {
-
-//         //truyen vao page = page number trang hien tai
-//         const {keyword, brand, sort, page = 1}= req.body;
-//         //timkiem theo tu khoa
-//         const findProduct = await Product.find({
-//             $or:[
-//                 {name:{ $regex: keyword, $options: 'i' } },
-//                 { desc: { $regex: keyword, $options: 'i' } },
-//                 { brand: { $in: await Brand.find({ name: { $regex: keyword, $options: 'i' } }) } },
-//                 { category: { $in: await Category.find({ name: { $regex: keyword, $options: 'i' } }) } }
-//             ],
-//             status: true
-//         }).select("_id price rating brand");
-
-//         console.log(findProduct);
-
-//         //B2:
-//         const final = await allSort({findProduct, brand, sort}) ;
-
-//         //B3:
-//         //
-//         const pages = Math.ceil(final.length / PAGE_SIZE);
-//         const semiFinals = final.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-
-//         const finalsemi = await fillInfoListProducts(semiFinals);
-
-//         return res.status(200).send({
-//             success: true ,
-//             message:"Thành công",
-//             data: finalsemi,
-//             pagination: {
-//                 currentPage: page,
-//                 totalPages: pages,
-//                 totalItems: final.length
-//             }
-//         })
-
-//         // //B2 : sap xep -> final
-//         // let final = [];
-//         // let semiFinal = findProduct;
-//         // if (brand) semiFinal = listProducts.filter(item => item.brand === brand);
-
-//         // if (sort === 'pASC') final.sort((a, b) => a.price - b.price);
-//         // if (sort === 'pDESC') final.sort((a, b) => b.price - a.price);
-//         // if (sort === 'rASC') final.sort((a, b) => a.rating - b.rating);
-//         // if (sort === 'rDESC') final.sort((a, b) => b.rating - a.rating);
-
-//         // //b3
-//         // const pages = Math.ceil(final.length / PAGE_SIZE);
-//         // const semiFinals = final.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-//         // const result = [];
-//         // for (const product of semiFinals) {
-//         //     const found = await this.fillInfoOneProduct(product._id, userId);
-//         //     result.push(found);
-//         // }
-
-//     } catch (err) {
-//         next(err);
-//     }
-// };
+exports.deleteProduct= async(req, res, next)=> {
+  try {
+    const {productId} = req.params;
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res.status(404).send({ success: false, message: "Không tìm thấy sản phẩm" });
+      }
+      // Xóa sản phẩm
+      await product.static.delete();
+      res.status(200).json({ success: true, message: "Xóa sản phẩm thành công" });
+      
+  } catch (error) {
+    console.error("Error deleting product:", error);
+    next(error);
+  }
+};

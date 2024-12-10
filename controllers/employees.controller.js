@@ -7,6 +7,9 @@ const VariantProduct = require("../models/variants");
 const { default: mongoose } = require("mongoose");
 const Brand = require("../models/brands");
 const Category = require("../models/categories");
+const Categories = require("../models/categories");
+const User = require("../models/users");
+const Order = require("../models/orders");
 
 //(role admin tạo tk employee)
 exports.register = async (req, res, next) => {
@@ -142,6 +145,7 @@ exports.getProducts = async (req, res, next) => {
     const {
       category,
       brand,
+      name,
       startDate,
       endDate,
       sortBy = "createdAt", // Mặc định sắp xếp theo ngày tạo
@@ -165,6 +169,75 @@ exports.getProducts = async (req, res, next) => {
       filters.createdAt = {};
       if (startDate) filters.createdAt.$gte = new Date(startDate); // Ngày bắt đầu
       if (endDate) filters.createdAt.$lte = new Date(endDate); // Ngày kết thúc
+    }
+
+    if (name) {
+      filters.name = { $regex: name, $options: "i" }; // Tìm kiếm theo tên, không phân biệt hoa thường
+    }
+
+    // Tính toán phân trang
+    const skip = (Number(page) - 1) * Number(limit);
+
+    // Lấy danh sách sản phẩm với các điều kiện
+    const products = await Product.find(filters)
+      .sort({ [sortBy]: order === "desc" ? -1 : 1 }) // Sắp xếp theo trường và thứ tự
+      .skip(skip) // Bỏ qua số sản phẩm tương ứng
+      .limit(Number(limit)) // Giới hạn số sản phẩm trả về
+      .populate("category", "_id name") // Populate thông tin category
+      .populate("brand", "_id name"); // Populate thông tin brand
+
+    // Tổng số sản phẩm
+    const totalProducts = await Product.countDocuments(filters);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        products,
+        totalProducts,
+        totalPages: Math.ceil(totalProducts / limit), // Tổng số trang
+        currentPage: Number(page),
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getProductsOnSales = async (req, res, next) => {
+  try {
+    const {
+      category,
+      brand,
+      name,
+      startDate,
+      endDate,
+      sortBy = "createdAt", // Mặc định sắp xếp theo ngày tạo
+      order = "desc", // Sắp xếp giảm dần
+      page = 1, // Mặc định trang đầu tiên
+      limit = 10, // Mặc định số sản phẩm trên mỗi trang
+    } = req.query;
+
+     // Tạo query filter
+     const filters = {
+      status: true, // Chỉ lấy sản phẩm có status bằng true
+    };
+
+    if (category) {
+      filters.category = category; // Lọc theo category
+    }
+
+    if (brand) {
+      filters.brand = brand; // Lọc theo brand
+    }
+
+    if (startDate || endDate) {
+      filters.createdAt = {};
+      if (startDate) filters.createdAt.$gte = new Date(startDate); // Ngày bắt đầu
+      if (endDate) filters.createdAt.$lte = new Date(endDate); // Ngày kết thúc
+    }
+
+    if (name) {
+      filters.name = { $regex: name, $options: "i" }; // Tìm kiếm theo tên, không phân biệt hoa thường
     }
 
     // Tính toán phân trang
@@ -233,6 +306,43 @@ exports.getProductById = async (req, res, next) => {
   }
 };
 
+exports.getEmployees = async (req, res, next) => {
+  try {
+    const {
+      page = 1,
+      limit = 10,
+      sortField = "createdAt",
+      sortOrder = "asc",
+      search = "",
+    } = req.query;
+
+    const query = search ? { username: { $regex: search, $options: "i" } } : {};
+
+    const sort = {
+      [sortField]: sortOrder === "desc" ? -1 : 1,
+    };
+
+    const totalStaffs = await Employee.countDocuments(query);
+    const totalPages = Math.ceil(totalStaffs / limit);
+
+    const staffs = await Employee.find(query)
+      .sort(sort)
+      .skip((page - 1) * limit)
+      .limit(parseInt(limit))
+      .select("-__v -pasword");
+    res.json({
+      data: {
+        staffs,
+        totalStaffs,
+        totalPages,
+        currentPage: parseInt(page),
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 exports.getAllBrand = async (req, res, next) => {
   try {
     const categoryId = req.params.id;
@@ -264,40 +374,6 @@ exports.getAllBrand = async (req, res, next) => {
     next(err);
   }
 };
-
-// exports.createProduct = async (req, res, next) => {
-//   try {
-//     const { name, category, brand, description, status } = req.body; // Đã loại bỏ trường price
-
-//     // Lấy link ảnh từ Cloudinary (đã upload trước đó)
-//     req.body.images = req.files.map((file) => file.path);
-
-//     const newProduct = new Product({
-//       name: name,
-//       images: req.body.images,
-//       category: category,
-//       brand: brand,
-//       description: description,
-//       status: status,
-//     });
-
-//     const saveProduct = await newProduct.save();
-//     if (!saveProduct) {
-//       return res.status(404).send({
-//         success: false,
-//         message: "Thêm sản phẩm không thành công!",
-//       });
-//     }
-
-//     return res.status(200).json({
-//       success: true,
-//       message: "Thêm sản phẩm thành công",
-//       data: saveProduct,
-//     });
-//   } catch (err) {
-//     next(err);
-//   }
-// };
 
 exports.createProduct = async (req, res, next) => {
   let savedProduct = null;
@@ -404,8 +480,38 @@ exports.deleteProduct = async (req, res, next) => {
 
 exports.getCategories = async (req, res, next) => {
   try {
-    const categories = await Category.find().lean();
-    res.status(200).json({ success: true, data: categories });
+    const {
+      page = 1,
+      limit = 10,
+      sortField = "createdAt",
+      sortOrder = "asc",
+      search = "",
+    } = req.query; // Lấy giá trị 'name' từ query string
+
+    const sort = {
+      [sortField]: sortOrder === "desc" ? -1 : 1,
+    };
+
+    const query = search
+      ? { name: { $regex: search, $options: "i" } } // Tìm kiếm theo 'name' (không phân biệt hoa thường)
+      : {}; // Không có name thì trả về tất cả
+
+    const totalCategories = await Categories.countDocuments(query);
+    const totalPages = Math.ceil(totalCategories / limit);
+
+    const categories = await Categories.find(query)
+      .sort(sort)
+      .skip((page - 1) * limit)
+      .limit(parseInt(limit))
+      .select("-__v");
+    res.json({
+      data: {
+        categories,
+        totalCategories,
+        totalPages,
+        currentPage: parseInt(page),
+      },
+    });
   } catch (error) {
     next(error);
   }
@@ -413,8 +519,38 @@ exports.getCategories = async (req, res, next) => {
 
 exports.getBrands = async (req, res, next) => {
   try {
-    const brands = await Brand.find().lean();
-    res.status(200).json({ success: true, data: brands });
+    const {
+      page = 1,
+      limit = 10,
+      sortField = "createdAt",
+      sortOrder = "asc",
+      search = "",
+    } = req.query; // Lấy giá trị 'name' từ query string
+
+    const sort = {
+      [sortField]: sortOrder === "desc" ? -1 : 1,
+    };
+
+    const query = search
+      ? { name: { $regex: search, $options: "i" } } // Tìm kiếm theo 'name' (không phân biệt hoa thường)
+      : {}; // Không có name thì trả về tất cả
+
+    const totalBrands = await Brand.countDocuments(query);
+    const totalPages = Math.ceil(totalBrands / limit);
+
+    const brands = await Brand.find(query)
+      .sort(sort)
+      .skip((page - 1) * limit)
+      .limit(parseInt(limit))
+      .select("-__v");
+    res.json({
+      data: {
+        brands,
+        totalBrands,
+        totalPages,
+        currentPage: parseInt(page),
+      },
+    });
   } catch (error) {
     next(error);
   }
@@ -422,8 +558,92 @@ exports.getBrands = async (req, res, next) => {
 
 exports.getUsers = async (req, res, next) => {
   try {
-    const users = await User.find().select("-__v -password -updatedAt").lean();
-    res.status(200).json({ success: true, data: users });
+    const {
+      page = 1,
+      limit = 10,
+      sortField = "createdAt",
+      sortOrder = "asc",
+      search = "",
+    } = req.query; // Lấy giá trị 'name' từ query string
+
+    const sort = {
+      [sortField]: sortOrder === "desc" ? -1 : 1,
+    };
+
+    const query = search
+      ? { username: { $regex: search, $options: "i" } } // Tìm kiếm theo 'name' (không phân biệt hoa thường)
+      : {}; // Không có name thì trả về tất cả
+
+    const totalUsers = await User.countDocuments(query);
+    const totalPages = Math.ceil(totalUsers / limit);
+
+    const users = await User.find(query)
+      .sort(sort)
+      .skip((page - 1) * limit)
+      .limit(parseInt(limit))
+      .select("-__v -password");
+    res.json({
+      data: {
+        users,
+        totalUsers,
+        totalPages,
+        currentPage: parseInt(page),
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+
+exports.getOrders = async (req, res, next) => {
+  try {
+    const {
+      page = 1,
+      limit = 10,
+      sortField = "createdAt",
+      sortOrder = "asc",
+      search = "", // Dùng cho tìm kiếm
+      orderStatus = "", // Có thể tìm kiếm theo trạng thái đơn hàng
+    } = req.query;
+
+    const sort = {
+      [sortField]: sortOrder === "desc" ? -1 : 1,
+    };
+
+    // Tạo query tìm kiếm
+    const query = {};
+
+    // Nếu có 'search' thì tìm kiếm theo tên người dùng
+    if (search) {
+      query["infomationUser.name"] = { $regex: search, $options: "i" };
+    }
+
+    // Nếu có 'orderStatus' thì lọc theo trạng thái đơn hàng
+    if (orderStatus && orderStatus !== "") {
+      query["orderStatus"] = orderStatus;
+    }
+
+    const totalOrders = await Order.countDocuments(query);
+    const totalPages = Math.ceil(totalOrders / limit);
+
+    // Lấy danh sách đơn hàng, sắp xếp, phân trang và giới hạn kết quả
+    const orders = await Order.find(query)
+      .sort(sort)
+      .skip((page - 1) * limit)
+      .limit(parseInt(limit))
+      .populate("user", "username email") // Nếu cần thêm thông tin từ bảng User
+      .populate("productItem.product", "name price") // Nếu cần thêm thông tin sản phẩm
+      .select("-__v "); // Loại bỏ trường __v (version key)
+
+    res.json({
+      data: {
+        orders,
+        totalOrders,
+        totalPages,
+        currentPage: parseInt(page),
+      },
+    });
   } catch (error) {
     next(error);
   }

@@ -8,13 +8,13 @@ const Filter = require("../models/filters");
 const Brand = require("../models/brands");
 
 //vua update & create
-exports.createcategories = async (req, res, next) => {
+exports.updateCategory = async (req, res, next) => {
   try {
     // Lấy link ảnh từ Cloudinary (đã upload trước đó)
-    req.body.images = req.files[0].path;
-
+    req.body.images = req.files[0]?.path;
+    const {categoryId} = req.params;
     // Kiểm tra nếu danh mục đã tồn tại
-    const existCategories = await Category.findOne({ name: req.body.name });
+    const existCategories = await Category.findOne({ _id: categoryId ? categoryId : null});
     if (existCategories) {
       const updatedCategories = await Category.findByIdAndUpdate(
         existCategories._id,
@@ -51,10 +51,31 @@ exports.createcategories = async (req, res, next) => {
   }
 };
 
+exports.createCategory= async(req, res, next) =>{
+  try{
+    req.body.images = req.files[0]?.path;
+    const newCategories = new Category({
+      name: req.body.name,
+      images: req.body.images,
+      status: req.body.status || false,
+    });
+
+    const saveCategories = await newCategories.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Tạo danh mục thành công",
+      data: saveCategories,
+    });
+  }
+  catch(err){
+    next(err);
+  }
+}
 
 exports.getallcategories = async (req, res, next) => {
   try {
-    const listCategories = await Category.find({status : true}).select(
+    const listCategories = await Category.find({ status: true }).select(
       "-__v -createdAt -updatedAt"
     );
 
@@ -71,9 +92,9 @@ exports.getallcategories = async (req, res, next) => {
 exports.getcatebyid = async (req, res, next) => {
   try {
     const _id = req.params.id;
-    const foundId = await Category.findOne({_id : _id , status : true});
+    const foundId = await Category.findOne({ _id: _id, status: true });
 
-    if (foundId.length == 0 ) {
+    if (foundId.length == 0) {
       return res.status(404).send({
         success: false,
         message: "Không tìm thấy Category",
@@ -118,99 +139,6 @@ exports.deletecategory = async (req, res, next) => {
   }
 };
 
-//lay sp theo danh muc
-// exports.getallproduct = async (req, res, next) => {
-//     try {
-//         const categoryId = req.params.id;
-//         const listProduct = await Product.find({category: categoryId, status : true});
-
-//         if (!listProduct) {
-//             return res.status(404).send({
-//                 success: false,
-//                 message: 'Category không tồn tại!'});
-//         }
-
-//         return res.status(200).send({
-//             success: true,
-//             message: 'Danh sách sản phẩm',
-//             data: listProduct
-//         });
-
-//     } catch (err) {
-//         next(err);
-//     }
-// };
-
-// exports.getallproduct = async (req, res, next) => {
-//     try {
-//         const categoryId = req.params.id;
-//         const listProduct = await Product.find({category: categoryId, status : true});
-
-//         if (!listProduct) {
-//             return res.status(404).send({
-//                 success: false,
-//                 message: 'Category không tồn tại!'});
-//         }
-
-//         const productsDetails = await Promise.all(
-//             listProduct.map(async (product) => {
-//                 const variants = await VariantProduct.find({ product: product._id });
-//                 const specs = await Specifications.findOne({ productId: product._id });
-//                 return {
-//                     ...product.toObject(), // Chuyển đổi sản phẩm sang object để thêm properties
-//                     specifications: specs ? specs.specifications : [], // Nếu không có specs, trả về mảng rỗng
-//                     variants: variants ? variants : [] // Nếu không có variants, trả về mảng rỗng
-//                 };
-//             })
-//         )
-//         return res.status(200).send({
-//             success: true,
-//             message: 'Danh sách sản phẩm',
-//             data: productsDetails
-//         });
-
-//     } catch (err) {
-//         next(err);
-//     }
-// };
-// exports.getallproduct = async (req, res, next) => {
-//     try {
-//         const categoryId = req.params.id;
-//         const listProduct = await Product.find({category: categoryId, status : true});
-//         const filtereds = await Filter.findOne({ categoryId: categoryId });
-//         // Chọn trường `key` từ mỗi phần tử trong mảng `filters`
-//         const keys = filtereds.filters.map(filter => filter.key);
-//         if (!listProduct) {
-//             return res.status(404).send({
-//                 success: false,
-//                 message: 'Category không tồn tại!'});
-//         }
-
-//         const productsDetails = await Promise.all(
-//             listProduct.map(async (product) => {
-//                 const variants = await VariantProduct.find({ product: product._id });
-//                 const specs = await Specifications.findOne({ productId: product._id }).select('specifications')
-//                 const allDetails = specs.specifications.flatMap(spec => spec.details);
-//                 const filteredSpecs = allDetails.filter(spec => keys.some(key => spec.key.includes(key)));
-//                 console.log(filteredSpecs);
-
-//                 return {
-//                     ...product.toObject(), // Chuyển đổi sản phẩm sang object để thêm properties
-//                     specifications: filteredSpecs ? filteredSpecs : [], // Nếu không có specs, trả về mảng rỗng
-//                     variants: variants ? variants : [], // Nếu không có variants, trả về mảng rỗng
-//                 };
-//             })
-//         )
-//         return res.status(200).send({
-//             success: true,
-//             message: 'Danh sách sản phẩm',
-//             data: productsDetails
-//         });
-
-//     } catch (err) {
-//         next(err);
-//     }
-// };
 exports.getallproduct = async (req, res, next) => {
   try {
     const categoryId = req.params.id;
@@ -370,18 +298,10 @@ exports.getallproduct = async (req, res, next) => {
   }
 };
 
-
-
 exports.getallproductflutter = async (req, res, next) => {
   try {
     const categoryId = req.params.id;
-    const {
-      brand,
-      minPrice,
-      maxPrice,
-      sort,
-      ...filters
-    } = req.query;
+    const { brand, minPrice, maxPrice, sort, ...filters } = req.query;
 
     // Tìm thông tin thương hiệu
     const brandDoc = brand ? await Brand.findOne({ name: brand }).lean() : null;
@@ -417,7 +337,7 @@ exports.getallproductflutter = async (req, res, next) => {
       return res.status(200).send({
         success: true,
         message: "Không có sản phẩm nào trong danh mục!",
-        data : listProduct
+        data: listProduct,
       });
     }
 
@@ -512,8 +432,6 @@ exports.getallproductflutter = async (req, res, next) => {
   }
 };
 
-
-
 exports.getAllBrand = async (req, res, next) => {
   try {
     const categoryId = req.params.id;
@@ -569,5 +487,3 @@ exports.getFilterOptions = async (req, res, next) => {
     next(err);
   }
 };
-
-

@@ -8,12 +8,12 @@ const auth = require("../middlewares/auth");
 //all role
 router.get("/",  categoryController.getallcategories);
 router.get("/:id",  categoryController.getcatebyid);
+
 //admin , employee
-router.post("/create",uploadCloud.array('images'),  categoryController.createcategories);
-
-
+router.put("/:categoryId",uploadCloud.array('images'),  categoryController.updateCategory);
+router.post("/create",uploadCloud.array('images'), categoryController.createCategory);
 //admin
-router.delete("/:id",auth.verifyTokenAndAdmin, categoryController.deletecategory);
+router.delete("/:id" ,categoryController.deletecategory);
 
 //get all product (category)
 router.get("/:id/products",  categoryController.getallproduct);
@@ -27,4 +27,5 @@ router.get("/:id/filters", categoryController.getFilterOptions);
 
 //get brands options for category
 router.get("/:id/brands", categoryController.getAllBrand);
+
 module.exports = router;    

@@ -1,5 +1,5 @@
 const userController = require("../controllers/users.controller");
-
+const uploadCloud = require("../middlewares/multer");
 const express = require("express");
 const router = express.Router();
 const User = require("../models/users");
@@ -11,7 +11,7 @@ router.post("/register", userController.register);
 router.post("/logintoken", userController.logintoken);
 router.post("/login", userController.login);
 router.post("/resetpass", userController.resetpass);
-
+router.put("/:id",uploadCloud.array('images'), userController.updateUser);
 
 router.get("/:id", userController.getuserbyid);
 router.get("/:id/cart", userController.getcartbyuser);

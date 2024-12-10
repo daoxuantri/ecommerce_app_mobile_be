@@ -39,21 +39,21 @@ const userSchema = new Schema ({
 );
 
 
-//return Json
-userSchema.set("toJSON",{
-    transform: (document , returnedObject)=>{
-        returnedObject.id = returnedObject._id.toString();
-        delete returnedObject._id;
-        delete returnedObject.__v;
-        delete returnedObject.password;
-        delete returnedObject.createdAt;
-        delete returnedObject.updatedAt;
-        delete returnedObject.contact;
+// //return Json
+// userSchema.set("toJSON",{
+//     transform: (document , returnedObject)=>{
+//         returnedObject.id = returnedObject._id.toString();
+//         delete returnedObject._id;
+//         delete returnedObject.__v;
+//         delete returnedObject.password;
+//         delete returnedObject.createdAt;
+//         delete returnedObject.updatedAt;
+//         delete returnedObject.contact;
             
         
         
 
-    },
-});
+//     },
+// });
 const User = mongoose.model("User",userSchema);
 module.exports= User    

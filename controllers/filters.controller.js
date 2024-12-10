@@ -46,3 +46,54 @@ exports.deleteFilterById = async (req, res, next) => {
         next(err);
     }
 };
+
+exports.getFilters = async (req, res, next) => {
+    try {
+        const filters = await Filter.find()
+            .populate("categoryId", "name") // populate categoryId để lấy tên của category
+            .exec();
+        
+        res.status(200).json({
+            success: true,
+            data: filters
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            success: false,
+            message: "Lỗi khi lấy dữ liệu bộ lọc"
+        });
+    }
+};
+
+exports.updateFilterById = async (req, res, next) => {
+    const filterId = req.params.id;
+    const { categoryId, filters } = req.body; // Lấy categoryId và filters từ body
+  
+    try {
+      // Tìm bộ lọc theo ID và cập nhật
+      const updatedFilter = await Filter.findByIdAndUpdate(
+        filterId,
+        { categoryId, filters },
+        { new: true, runValidators: true } // `new: true` để trả về bộ lọc đã được cập nhật
+      );
+  
+      if (!updatedFilter) {
+        return res.status(404).json({
+          success: false,
+          message: "Filter not found"
+        });
+      }
+  
+      res.status(200).json({
+        success: true,
+        data: updatedFilter
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({
+        success: false,
+        message: "Lỗi khi cập nhật bộ lọc"
+      });
+    }
+}

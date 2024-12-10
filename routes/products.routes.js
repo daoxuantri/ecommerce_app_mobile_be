@@ -16,6 +16,7 @@ router.get("/home",  productController.getall);
 //flutter
 router.get("/homeflutter",  productController.getallflutter);
 
+router.delete("/:productId", productController.deleteProduct);
 
 //get list sp lien quan 
 router.get("/:id/listallproduct",  productController.listallproduct);

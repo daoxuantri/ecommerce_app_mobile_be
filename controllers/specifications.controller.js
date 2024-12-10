@@ -75,3 +75,24 @@ exports.createDetailProduct = async (req, res, next) => {
         next(err);
     }
 };
+
+exports.updateSpecifications = async (req, res) => {
+    try {
+      const { productId } = req.params;
+      const { specifications } = req.body;
+  
+      const updatedSpecifications = await Specifications.findOneAndUpdate(
+        { productId },
+        { specifications },
+        { new: true, upsert: true }
+      );
+  
+      res.status(200).json({
+        success: true,
+        data: updatedSpecifications,
+      });
+    } catch (error) {
+      console.error('Lỗi khi cập nhật sản phẩm:', error);
+      next(error);
+    }
+}

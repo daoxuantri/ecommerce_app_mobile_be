@@ -34,23 +34,5 @@ const employeeSchema = new Schema ({
     },
 },{ timestamps: true }
 );
-
-
-//return Json
-employeeSchema.set("toJSON",{
-    transform: (document , returnedObject)=>{
-        returnedObject.id = returnedObject._id.toString();
-        delete returnedObject._id;
-        delete returnedObject.__v;
-        delete returnedObject.password;
-        delete returnedObject.createdAt;
-        delete returnedObject.updatedAt;
-        delete returnedObject.contact;
-            
-        
-        
-
-    },
-});
 const Employee = mongoose.model("Employee",employeeSchema);
 module.exports= Employee    

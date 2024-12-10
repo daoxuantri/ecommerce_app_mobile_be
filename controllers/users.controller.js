@@ -218,6 +218,53 @@ exports.getuserbyid = async (req, res, next) => {
 };
 
 
+exports.updateUser = async (req, res, next) => {
+    try {
+      const { id } = req.params; // Lấy user ID từ URL params
+      const { username, email, password, contact, bonuspoint, status } = req.body;
+  
+      // Nếu có file hình ảnh mới, lấy đường dẫn
+      let updatedData = {
+        username,
+        email,
+        contact,
+        bonuspoint,
+        status,
+      };
+  
+      // Kiểm tra nếu có ảnh mới
+      if (req.file) {
+        updatedData.images = req.file.path; // Lấy đường dẫn ảnh từ middleware (Multer)
+      }
+  
+      // Cập nhật thông tin user
+      const updatedUser = await User.findByIdAndUpdate(id, updatedData, {
+        new: true, // Trả về dữ liệu mới sau khi cập nhật
+        runValidators: true, // Chạy các validator của schema
+      });
+  
+      if (!updatedUser) {
+        return res.status(404).json({
+          success: false,
+          message: "User không tồn tại",
+        });
+      }
+  
+      return res.status(200).json({
+        success: true,
+        message: "Cập nhật thông tin user thành công",
+        data: updatedUser,
+      });
+    } catch (err) {
+      console.error("Error updating user:", err);
+      return res.status(500).json({
+        success: false,
+        message: "Cập nhật thông tin user thất bại",
+      });
+    }
+  };
+  
+
 
 //lay tat ca san pham gio hang cho users
 exports.getcartbyuser = async (req, res, next) => {

@@ -16,12 +16,15 @@ router.post("/register",employeeController.register);
 router.post("/login", employeeController.login);
 
 router.get("/products", employeeController.getProducts);
-router.get("/products/:productId",employeeController.getProductById);
+router.get("/products/sales", employeeController.getProductsOnSales);
 router.post("/products", uploadCloud.array('images'),employeeController.createProduct);
+router.get("/products/:productId",employeeController.getProductById);
 
 router.get("/brands", employeeController.getBrands);
 router.get("/categories", employeeController.getCategories);
 router.get("/users", employeeController.getUsers);
+router.get("/staffs", employeeController.getEmployees);
+router.get("/orders", employeeController.getOrders);
 //resetpass-employee
 router.post("/getempbyid/:id",employeeController.getempbyid);
 router.get("/resetpass",employeeController.resetpass);
