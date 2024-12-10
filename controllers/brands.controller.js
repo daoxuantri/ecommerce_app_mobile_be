@@ -8,10 +8,32 @@ const mongoose = require("mongoose");
 exports.createbrand = async (req, res, next) => {
     try {
         // Lấy link ảnh từ Cloudinary (đã upload trước đó)
-        req.body.images = req.files[0].path;
+        req.body.images = req.files[0]?.path;
+        const newBrand = new Brand({
+            name: req.body.name,
+            images: req.body.images,
+            status: req.body.status || false, // Mặc định là `false` nếu không cung cấp
+        });
 
+        const saveBrand = await newBrand.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "Tạo nhãn hàng thành công",
+            data: saveBrand,
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
+exports.updatebrand = async (req, res, next) => {
+    try {
+        // Lấy link ảnh từ Cloudinary (đã upload trước đó)
+        req.body.images = req.files[0]?.path;
+        const {brandId} = req.params;
         // Kiểm tra nếu nhãn hàng đã tồn tại
-        const existBrand = await Brand.findOne({ name: req.body.name });
+        const existBrand = await Brand.findOne({ _id: brandId ? brandId : null });
         if (existBrand) {
             const updateBrand = await Brand.findByIdAndUpdate(
                 existBrand._id,
@@ -47,7 +69,6 @@ exports.createbrand = async (req, res, next) => {
         next(err);
     }
 };
-
 
 
 exports.getallbrand = async (req, res, next) => {

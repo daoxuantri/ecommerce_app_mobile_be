@@ -7,7 +7,8 @@ const auth = require("../middlewares/auth");
 
 //role (admin , employee)
 router.post("/create", uploadCloud.array('images'), brandController.createbrand);
-
+router.put("/:brandId", uploadCloud.array('images'), brandController.updatebrand);
+router.delete("/:brandId", brandController.deletebrand);
 router.get("/",  brandController.getallbrand);
 router.get("/:id",  brandController.getbrandbyid);
 router.get("/:id/products",  brandController.getallproduct);
