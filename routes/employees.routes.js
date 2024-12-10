@@ -16,8 +16,9 @@ router.post("/register",employeeController.register);
 router.post("/login", employeeController.login);
 
 router.get("/products", employeeController.getProducts);
-router.get("/products/:productId",employeeController.getProductById);
+router.get("/products/sales", employeeController.getProductsOnSales);
 router.post("/products", uploadCloud.array('images'),employeeController.createProduct);
+router.get("/products/:productId",employeeController.getProductById);
 
 router.get("/brands", employeeController.getBrands);
 router.get("/categories", employeeController.getCategories);

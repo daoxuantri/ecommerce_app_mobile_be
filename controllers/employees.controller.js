@@ -203,6 +203,71 @@ exports.getProducts = async (req, res, next) => {
   }
 };
 
+exports.getProductsOnSales = async (req, res, next) => {
+  try {
+    const {
+      category,
+      brand,
+      name,
+      startDate,
+      endDate,
+      sortBy = "createdAt", // Mặc định sắp xếp theo ngày tạo
+      order = "desc", // Sắp xếp giảm dần
+      page = 1, // Mặc định trang đầu tiên
+      limit = 10, // Mặc định số sản phẩm trên mỗi trang
+    } = req.query;
+
+     // Tạo query filter
+     const filters = {
+      status: true, // Chỉ lấy sản phẩm có status bằng true
+    };
+
+    if (category) {
+      filters.category = category; // Lọc theo category
+    }
+
+    if (brand) {
+      filters.brand = brand; // Lọc theo brand
+    }
+
+    if (startDate || endDate) {
+      filters.createdAt = {};
+      if (startDate) filters.createdAt.$gte = new Date(startDate); // Ngày bắt đầu
+      if (endDate) filters.createdAt.$lte = new Date(endDate); // Ngày kết thúc
+    }
+
+    if (name) {
+      filters.name = { $regex: name, $options: "i" }; // Tìm kiếm theo tên, không phân biệt hoa thường
+    }
+
+    // Tính toán phân trang
+    const skip = (Number(page) - 1) * Number(limit);
+
+    // Lấy danh sách sản phẩm với các điều kiện
+    const products = await Product.find(filters)
+      .sort({ [sortBy]: order === "desc" ? -1 : 1 }) // Sắp xếp theo trường và thứ tự
+      .skip(skip) // Bỏ qua số sản phẩm tương ứng
+      .limit(Number(limit)) // Giới hạn số sản phẩm trả về
+      .populate("category", "_id name") // Populate thông tin category
+      .populate("brand", "_id name"); // Populate thông tin brand
+
+    // Tổng số sản phẩm
+    const totalProducts = await Product.countDocuments(filters);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        products,
+        totalProducts,
+        totalPages: Math.ceil(totalProducts / limit), // Tổng số trang
+        currentPage: Number(page),
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 exports.getProductById = async (req, res, next) => {
   try {
     const productId = req.params.productId; // Lấy productId từ URL
