@@ -1,91 +1,99 @@
 const Order = require("../models/orders"); 
 const Bill = require("../models/bills"); 
+const Product = require("../models/products"); 
 
 
 exports.setStatusOrder = async (req, res, next) => {
-    const { orderId, status } = req.body;
+  const { orderId, status } = req.body;
 
-    try {
-        // Kiểm tra thông tin đầu vào
-        if (!orderId || !status) {
-            return res.status(400).json({
-                success: false,
-                message: "Thiếu thông tin orderId hoặc status",
-            });
-        }
+  try {
+      if (!orderId || !status) {
+          return res.status(400).json({
+              success: false,
+              message: "Thiếu thông tin orderId hoặc status",
+          });
+      }
 
-        // Tìm đơn hàng theo ID
-        const order = await Order.findById(orderId);
-        if (!order) {
-            return res.status(404).json({
-                success: false,
-                message: "Không tìm thấy đơn hàng",
-            });
-        }
+      // Tìm đơn hàng theo ID
+      const order = await Order.findById(orderId).populate("productItem.product");
+      if (!order) {
+          return res.status(404).json({
+              success: false,
+              message: "Không tìm thấy đơn hàng",
+          });
+      }
 
-        // Kiểm tra nếu trạng thái là "COMPLETED"
-        if (status === "COMPLETED") {
-            // Nếu đơn hàng đã thanh toán VNPay, chỉ cập nhật trạng thái
-            if (order.paid) {
-                order.orderStatus = status;
-                await order.save();
+      // Lấy trạng thái trước đó
+      const previousStatus = order.orderStatus;
 
-                return res.status(200).json({
-                    success: true,
-                    message: "Cập nhật trạng thái đơn hàng thành công (VNPay)",
-                    order,
-                });
-            }
+      // Xử lý khi chuyển từ COMPLETED sang trạng thái khác
+      if (previousStatus === "COMPLETED" && status !== "COMPLETED") {
+          // Tìm hóa đơn liên quan
+          const existingBill = await Bill.findOne({ order: orderId });
 
-            // Nếu chưa thanh toán hoặc chưa có hóa đơn, kiểm tra và tạo hóa đơn
-            const existingBill = await Bill.findOne({ order: orderId });
-            if (existingBill) {
-                return res.status(400).json({
-                    success: false,
-                    message: "Đơn hàng này đã được lập hóa đơn trước đó",
-                    bill: existingBill,
-                });
-            }
+          if (existingBill) {
+              // Chỉ xóa hóa đơn nếu phương thức thanh toán là COD
+              if (existingBill.paymentMethod === "COD") {
+                  await Bill.deleteOne({ _id: existingBill._id }); // Xóa hóa đơn COD
+              }
+          }
 
-            // Tạo mã hóa đơn (billCode)
-            const billCode = `BILL-${Date.now()}`;
-            const paymentMethod = order.paid ? "VNPAY" : "COD";
+          // Giảm số lượng bán được của sản phẩm
+          for (const item of order.productItem) {
+              const product = await Product.findById(item.product._id);
+              if (product) {
+                  product.sold -= item.quantity;
+                  await product.save();
+              }
+          }
+      }
 
-            const newBill = new Bill({
-                order: order._id,
-                billCode: billCode,
-                total: order.total,
-                paymentMethod: paymentMethod,
-            });
+      // Xử lý khi chuyển trạng thái thành COMPLETED
+      if (status === "COMPLETED") {
+          // Kiểm tra nếu đã có hóa đơn thì không tạo mới
+          const existingBill = await Bill.findOne({ order: orderId });
+          if (!existingBill) {
+              // Tạo mã hóa đơn
+              const billCode = `BILL-${Date.now()}`;
+              const paymentMethod = order.paid ? "VNPAY" : "COD";
 
-            // Lưu hóa đơn vào database
-            await newBill.save();
+              const newBill = new Bill({
+                  order: order._id,
+                  billCode: billCode,
+                  total: order.total,
+                  paymentMethod: paymentMethod,
+              });
 
-            // Cập nhật trạng thái đơn hàng
-            order.orderStatus = status;
-            await order.save();
+              // Lưu hóa đơn vào database
+              await newBill.save();
+          }
 
-            return res.status(200).json({
-                success: true,
-                message: "Cập nhật trạng thái đơn hàng và tạo hóa đơn thành công",
-                order,
-                bill: newBill,
-            });
-        }
+          // Tăng số lượng bán được của sản phẩm
+          for (const item of order.productItem) {
+              const product = await Product.findById(item.product._id);
+              if (product) {
+                  product.sold += item.quantity;
+                  await product.save();
+              }
+          }
+      }
 
-        // Cập nhật trạng thái khác ngoài "COMPLETED"
-        order.orderStatus = status;
-        await order.save();
+      // Cập nhật trạng thái đơn hàng
+      order.orderStatus = status;
+      await order.save();
 
-        return res.status(200).json({
-            success: true,
-            message: "Cập nhật trạng thái đơn hàng thành công",
-            order,
-        });
-    } catch (error) {
-        next(error);
-    }
+      return res.status(200).json({
+          success: true,
+          message: "Cập nhật trạng thái đơn hàng thành công",
+          order,
+      });
+  } catch (error) {
+      next(error);
+  }
 };
+
+
+
 exports.getBills = async (req, res) => {
     try {
       const {

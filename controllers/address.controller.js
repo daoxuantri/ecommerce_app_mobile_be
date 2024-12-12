@@ -74,16 +74,20 @@ exports.getalladdressbyuser = async (req, res, next) => {
       });
     }
 
+    // Sắp xếp các địa chỉ: địa chỉ có status: true sẽ nằm đầu
+    const sortedAddresses = userAddress.location.sort((a, b) => {
+      return b.status - a.status; // `true` sẽ được sắp xếp trước `false`
+    });
+
     return res.status(200).json({
       success: true,
       message: "Lấy danh sách địa chỉ thành công",
-      data: userAddress.location,
+      data: sortedAddresses,
     });
   } catch (err) {
     next(err);
   }
 };
-
 exports.getaddressdefault = async (req, res, next) => {
   try {
     const userId = req.params.idUser;
