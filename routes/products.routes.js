@@ -16,16 +16,19 @@ router.get("/home",  productController.getall);
 //flutter
 router.get("/homeflutter",  productController.getallflutter);
 
+//o day kiem tra du lieu ham data (Tri lam kiem tra du lieu trong mongo nha)
+router.get("/products-without-specifications", productController.findProductsWithoutSpecifications);
+
 router.delete("/:productId", productController.deleteProduct);
 
-//get list sp lien quan 
-router.get("/:id/listallproduct",  productController.listallproduct);
 //get list sp lien quan cho website
 router.get("/:id/relatedproduct", productController.getRelatedProducts);
 
 router.get("/search", productController.searchProduct);
 
 router.get("/:id", productController.getproductbyid);
+
+
 
 
 
