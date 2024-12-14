@@ -421,49 +421,8 @@ exports.getallflutter = async (req, res, next) => {
   }
 };
 
-///list sp lien quan
-exports.listallproduct = async (req, res, next) => {
-  try {
-    const productId = req.params.id;
 
-    // Lấy thông tin sản phẩm gốc
-    const product = await Product.findById(productId).exec();
 
-    if (!product) {
-      return res.status(404).send({
-        success: false,
-        message: "Không tìm thấy sản phẩm",
-      });
-    }
-
-    // Truy vấn tìm sản phẩm liên quan theo danh mục
-    const relatedProducts = await Product.find({
-      _id: { $ne: productId }, // Loại trừ sản phẩm hiện tại
-      category: product.category, // Cùng danh mục
-      status: true, // Chỉ lấy sản phẩm đang hoạt động
-    })
-      .limit(10) // Giới hạn số lượng sản phẩm
-      .select("name images category brand description rating sold") // Chỉ lấy các trường cần thiết
-      .exec();
-
-    // Kiểm tra nếu không có sản phẩm liên quan
-    if (!relatedProducts || relatedProducts.length === 0) {
-      return res.status(200).send({
-        success: true,
-        message: "Không tìm thấy sản phẩm liên quan",
-        data: [],
-      });
-    }
-
-    return res.status(200).send({
-      success: true,
-      message: "Thành công",
-      data: relatedProducts,
-    });
-  } catch (err) {
-    next(err);
-  }
-};
 
 exports.getRelatedProducts = async (req, res, next) => {
   try {
@@ -613,5 +572,50 @@ exports.deleteProduct= async(req, res, next)=> {
   } catch (error) {
     console.error("Error deleting product:", error);
     next(error);
+  }
+};
+
+
+
+
+exports.findProductsWithoutSpecifications = async (req, res, next) => {
+  try {
+    // Tìm kiếm những sản phẩm không có specifications
+    const productsWithoutSpecifications = await Product.aggregate([
+      {
+        $lookup: {
+          from: "specifications", // Tên collection của bảng specifications
+          localField: "_id", // Trường liên kết từ bảng Product
+          foreignField: "productId", // Trường liên kết từ bảng Specifications
+          as: "specifications", // Tên mảng chứa dữ liệu specifications sau khi lookup
+        },
+      },
+      {
+        $match: {
+          specifications: { $size: 0 }, // Lọc ra những sản phẩm không có specifications
+        },
+      },
+      {
+        $project: {
+          _id: 1, // Chỉ lấy ID của sản phẩm
+          name: 1, // Chỉ lấy tên sản phẩm
+        },
+      },
+    ]);
+
+    // Trả kết quả
+    return res.status(200).send({
+      success: true,
+      message: "Danh sách sản phẩm không có specifications",
+      data: productsWithoutSpecifications,
+    });
+  } catch (error) {
+    // Xử lý lỗi
+    console.error("Error fetching products without specifications:", error);
+    return res.status(500).send({
+      success: false,
+      message: "Đã xảy ra lỗi khi lấy danh sách sản phẩm",
+      error: error.message,
+    });
   }
 };

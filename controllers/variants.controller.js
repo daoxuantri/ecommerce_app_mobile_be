@@ -27,15 +27,14 @@ exports.createvariant = async (req, res, next) => {
                     initial: variant.price.initial,
                     discount: variant.price.discount || null, // Nếu không có giảm giá, đặt discount là null
                 },
-                stockQuantity : variant.stockQuantity
-                
+                stockQuantity: variant.stockQuantity
             };
         });
 
         // Tạo variant mới
         const newVariant = new VariantProduct({
             product: productId,
-            memory: memory || null, // Đặt memory là null nếu không cung cấp
+            memory: memory ? memory : "null", // Nếu memory không có, gán giá trị là "null"
             variants: formattedVariants,
         });
 
@@ -55,6 +54,7 @@ exports.createvariant = async (req, res, next) => {
         });
     }
 };
+
 
 exports.updateVariants = async (req, res) => {
     try {

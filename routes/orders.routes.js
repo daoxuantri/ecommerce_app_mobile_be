@@ -16,7 +16,7 @@ router.get("/:statusOrder/status", orderController.getorderonstatus)
 
 //delete don hang -> trong tinh trang [progress]
 
-router.delete("/:idOrder", orderController.deleteorder)
+router.put("/:orderId/cancel", orderController.cancelOrder);
 
 //thong ke top 10 sp ban chay (user hoan thanh xong don hang)
 

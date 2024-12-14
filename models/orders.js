@@ -39,7 +39,10 @@ const orderSchema = new Schema(
         },
         paid: {
             type: Boolean, 
-            default : false
+            default : true
+        },
+        billCode :{
+            type : String,
         },
         total: {
             type: Number,
