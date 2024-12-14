@@ -272,26 +272,19 @@ exports.getProductById = async (req, res, next) => {
   try {
     const productId = req.params.productId; // Lấy productId từ URL
 
+    const product = await Product.findById(productId)
+    .populate([
+      { path: "category", select: "_id name" }, 
+      { path: "brand", select: "_id name" }, 
+    ])
+    .select("-__v")
+    .lean();
     // Tìm kiếm specifications dựa trên productId
-    const specifications = await Specifications.findOne({ productId })
-      .populate({
-        path: "productId", // Populate Product
-        populate: [
-          { path: "category", select: "_id name" }, // Populate Category
-          { path: "brand", select: "_id name" }, // Populate Brand
-        ],
-      })
-      .lean(); // Chuyển đổi sang object đơn giản
-
-    if (!specifications) {
-      return res.status(404).send({
-        success: false,
-        message: "Không tìm thấy specifications cho sản phẩm này",
-      });
-    }
+    const specifications = await Specifications.findOne({ productId }).select("-category -brand").lean(); // Chuyển đổi sang object đơn giản
 
     const variants = await VariantProduct.find({ product: productId }).lean();
     const data = {
+      ...product,
       ...specifications,
       variants: variants ? variants : [], // Nếu không có variants thì trả về mảng rỗng
     };
@@ -594,6 +587,69 @@ exports.getUsers = async (req, res, next) => {
     next(error);
   }
 };
+
+exports.deleteStaff = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Tìm 
+    const employee = await Employee.findById(id);
+    if (!employee) {
+      return res.status(404).json({ message: "Staff not found" });
+    }
+
+    await Employee.findByIdAndDelete(id);
+    res
+      .status(200)
+      .json({ message: "Staff and related data deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting staff:", error);
+    res
+      .status(500)
+      .json({ message: "An error occurred while deleting the staff", error: error});
+  }
+};
+
+exports.updateStaff = async (req, res, next) => {
+  try {
+    const { id } = req.params; // Lấy user ID từ URL params
+    const { username, email, contact, role } = req.body;
+    // Nếu có file hình ảnh mới, lấy đường dẫn
+    let updatedData = {
+      username,
+      email,
+      contact,
+      role
+    };
+    // Kiểm tra nếu có ảnh mới
+    if (req.file) {
+      updatedData.images = req.file.path; // Lấy đường dẫn ảnh từ middleware (Multer)
+    }
+    // Cập nhật thông tin user
+    const updatedUser = await Employee.findByIdAndUpdate(id, updatedData, {
+      new: true, // Trả về dữ liệu mới sau khi cập nhật
+      runValidators: true, // Chạy các validator của schema
+    });
+    if (!updatedUser) {
+      return res.status(404).json({
+        success: false,
+        message: "Staff không tồn tại",
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      message: "Cập nhật thông tin staff thành công",
+      data: updatedUser,
+    });
+  } catch (err) {
+    console.error("Error updating staff:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Cập nhật thông tin staff thất bại",
+    });
+  }
+};
+
 
 
 exports.getOrders = async (req, res, next) => {
