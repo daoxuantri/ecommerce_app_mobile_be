@@ -3,7 +3,7 @@ const User = require("../models/users");
 
 async function authenticateToken(req, res, next) {
   // ACCESS TOKEN FROM HEADER, REFRESH TOKEN FROM COOKIE
-  const token = req.headers.token;
+  const token = req.headers['authorization'];
   if (token) {
     const accessToken = token.split(" ")[1];
     try {

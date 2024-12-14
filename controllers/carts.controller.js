@@ -107,7 +107,8 @@ exports.createcart = async (req, res, next) => {
 // };
 
 exports.addproduct = async (req, res, next) => {
-    const { user, product, quantity, memory, color } = req.body;
+    const {product, quantity, memory, color } = req.body;
+    const user = req.user._id;
 
     try {
         // Bước 1: Xác minh sản phẩm tồn tại
@@ -203,7 +204,9 @@ exports.addproduct = async (req, res, next) => {
 
 //xoa sp trong cart cua user
 exports.removeproduct = async (req, res, next) => {
-    const { user, product } = req.body;
+    const {product } = req.body;
+    const user = req.user._id;
+
     try {
     //B1:
     const isItemExist = await Cart.findOne({
@@ -237,7 +240,7 @@ exports.removeproduct = async (req, res, next) => {
 
 
 exports.getcartbyuser = async (req, res, next) => {
-    const userId = req.params.id;
+    const userId = req.user._id;
 
     try {
         // Tìm giỏ hàng của user
@@ -269,7 +272,7 @@ exports.getcartbyuser = async (req, res, next) => {
 
 //xoa tat ca sp trong cart cua user
 exports.removeallproduct = async (req, res, next) => {
-    const { user } = req.body; 
+    const user = req.user._id;
     try {
         const isCartExist = await Cart.findOne({ user: user });
         if (!isCartExist) {

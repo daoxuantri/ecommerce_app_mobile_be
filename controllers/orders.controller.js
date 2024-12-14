@@ -4,7 +4,10 @@ const Bill = require("../models/bills");
 
 
 exports.createorder = async (req, res, next) => {
-    const { user, productItem, informationUser, paid, billCode } = req.body;
+    const {productItem, informationUser, paid, billCode } = req.body;
+    const user = req.user._id;
+
+
 
     try {
         // Kiểm tra dữ liệu đầu vào
@@ -112,7 +115,7 @@ exports.createorder = async (req, res, next) => {
 
 exports.getallorder = async (req, res, next) => {
     try {
-        const iduser = req.params.iduser;
+        const iduser = req.user._id;
         const { status } = req.query; // Lấy trạng thái từ query parameters
 
         // Tạo điều kiện lọc
@@ -293,8 +296,8 @@ exports.getorderonstatus = async (req, res, next) => {
 exports.cancelOrder = async (req, res, next) => {
     try {
       const { orderId } = req.params; // Lấy ID đơn hàng từ URL
-      const { status, idUser } = req.body; // Lấy trạng thái và ID người dùng từ request body
-  
+      const { status} = req.body; // Lấy trạng thái và ID người dùng từ request body
+      const idUser = req.user._id;
       // Kiểm tra trạng thái mới có phải "CANCELED" không
       if (status !== "CANCELED") {
         return res.status(400).json({

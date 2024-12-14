@@ -8,15 +8,19 @@ const auth = require("../middlewares/auth");
 
 //all role
 router.post("/register", userController.register);
-router.post("/logintoken", userController.logintoken);
+
 router.post("/login", userController.login);
+
 router.post("/resetpass", userController.resetpass);
 router.put("/:id",uploadCloud.array('images'), userController.updateUser);
 
+
 router.get("/:id", userController.getuserbyid);
+
 router.get("/:id/cart", userController.getcartbyuser);
 
-
+//test token ---(Trí)
+router.post("/logintoken", userController.logintoken);
 
 const {sendOTP, verifyOTP, sendVerificationOTPEmail, deleteOTP} = require("../otp/controller");
 const { verifyHashedData } = require("../util/hashData");
