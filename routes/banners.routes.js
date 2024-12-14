@@ -17,5 +17,5 @@ router.get("/",  bannerController.getallbanner);
 router.get("/:id",  bannerController.getbannerbyid);
 
 // //admin (sua lai role.verifyCation)
-router.delete("/:id",auth.verifyTokenAndAdmin, bannerController.deletebanner);
+router.delete("/:id", bannerController.deletebanner);
 module.exports = router;    

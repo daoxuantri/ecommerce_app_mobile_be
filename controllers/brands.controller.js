@@ -141,25 +141,18 @@ exports.getallproduct = async (req, res, next) => {
 // xem bo sung => ko can thiet thi bo
 exports.deletebrand = async (req, res, next) => {
     try {
-        const brandId = req.params.id; 
-        //Tim kiem brand
-        const findbrand = await Brand.findById(brandId);
-        if (!findbrand) {
-            return res.status(404).send({
-                success: false,
-                message: 'Brand không tồn tại!'}); 
+        const { id } = req.params;
+
+        // Tìm và xóa brand theo ID
+        const deletedBrand = await Brand.findByIdAndDelete(id);
+
+        if (!deletedBrand) {
+            return res.status(404).json({ message: "Brand not found" });
         }
 
-        //Xoa brand
-        const brand = await Brand.findByIdAndDelete(brandId);
-        // Update Product(Brand) => set null
-        await Product.updateMany({ brand: brandId }, { $set: { brand: null } });
-        return res.status(200).json({
-            success: true,
-            message: "Xóa Brand thành công"
-        });
-        
+        res.status(200).json({ message: "Brand deleted successfully", data: deletedBrand });
     } catch (error) {
+        console.error("Error deleting brand:", error);
         next(error);
     }
 };

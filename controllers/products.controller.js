@@ -190,6 +190,13 @@ exports.deleteproduct = async (req, res, next) => {
       });
     }
     const deleteProduct = await Product.findByIdAndDelete(product);
+    if (!deleteProduct) {
+      return res.status(201).send({
+        success: true,
+        message: "Không tìm thấy sản phẩm để xóa",
+        });
+        }
+    //xóa 
     return res.status(200).send({
       success: true,
       message: "Xóa thành công sản phẩm",
@@ -260,7 +267,7 @@ exports.getall = async (req, res, next) => {
     const categories = await Category.find({ status: true })
       .select("_id name")
       .lean();
-
+console.log(1);
     // Lấy tất cả sản phẩm thuộc tất cả các category, trạng thái `true`, sắp xếp theo createdAt mới nhất
     const products = await Product.find({
       category: { $in: categories.map((category) => category._id) },
@@ -269,7 +276,7 @@ exports.getall = async (req, res, next) => {
       .sort({ createdAt: -1 }) // Sắp xếp theo thời gian mới nhất
       .populate("brand", "name images") // Lấy thông tin brand
       .lean();
-
+      console.log(2);
     // Tạo danh sách sản phẩm và thương hiệu cho từng category
     const result = await Promise.all(
       categories.map(async (category) => {
@@ -282,6 +289,7 @@ exports.getall = async (req, res, next) => {
         // Lấy thông tin variants cho từng sản phẩm trong category
         const productsWithVariants = await Promise.all(
           categoryProducts.map(async (product) => {
+            console.log(product);
             const variants = await VariantProduct.find({
               product: product._id,
             }).lean();
@@ -310,10 +318,9 @@ exports.getall = async (req, res, next) => {
         // Lấy danh sách unique brand trong category
         const brands = [
           ...new Map(
-            categoryProducts.map((product) => [
-              product.brand._id,
-              product.brand,
-            ])
+            categoryProducts
+              .filter((product) => product.brand && product.brand._id) // Lọc sản phẩm có brand và brand._id
+              .map((product) => [product.brand._id, product.brand])
           ).values(),
         ];
 
