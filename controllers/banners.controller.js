@@ -39,7 +39,7 @@ exports.updatebanner = async (req, res, next) => {
         
         // Kiểm tra có file ảnh để cập nhật không
         if (req.files && req.files.length > 0) {
-            updateFields.images = req.files.map((file) => file.path);
+            updateFields.images = req.body.images = req.files[0].path;;
         }
 
         //timkiem

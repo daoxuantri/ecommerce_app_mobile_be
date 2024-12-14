@@ -12,7 +12,7 @@ router.post("/logintoken", userController.logintoken);
 router.post("/login", userController.login);
 router.post("/resetpass", userController.resetpass);
 router.put("/:id",uploadCloud.array('images'), userController.updateUser);
-
+router.delete('/:id', userController.deleteUser);
 router.get("/:id", userController.getuserbyid);
 router.get("/:id/cart", userController.getcartbyuser);
 
