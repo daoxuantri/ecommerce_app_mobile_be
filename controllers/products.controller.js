@@ -267,7 +267,6 @@ exports.getall = async (req, res, next) => {
     const categories = await Category.find({ status: true })
       .select("_id name")
       .lean();
-console.log(1);
     // Lấy tất cả sản phẩm thuộc tất cả các category, trạng thái `true`, sắp xếp theo createdAt mới nhất
     const products = await Product.find({
       category: { $in: categories.map((category) => category._id) },
@@ -276,7 +275,6 @@ console.log(1);
       .sort({ createdAt: -1 }) // Sắp xếp theo thời gian mới nhất
       .populate("brand", "name images") // Lấy thông tin brand
       .lean();
-      console.log(2);
     // Tạo danh sách sản phẩm và thương hiệu cho từng category
     const result = await Promise.all(
       categories.map(async (category) => {
@@ -289,7 +287,6 @@ console.log(1);
         // Lấy thông tin variants cho từng sản phẩm trong category
         const productsWithVariants = await Promise.all(
           categoryProducts.map(async (product) => {
-            console.log(product);
             const variants = await VariantProduct.find({
               product: product._id,
             }).lean();
