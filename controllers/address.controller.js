@@ -2,7 +2,9 @@ const Address = require("../models/address");
 //create
 exports.createaddress = async (req, res, next) => {
   try {
-    const { userId, address, status, name, phone } = req.body;
+    const {address, status, name, phone } = req.body;
+    const userId = req.user._id;
+
 
     // Kiểm tra xem người dùng đã có bảng Address chưa
     let userAddress = await Address.findOne({ user: userId });
@@ -61,7 +63,7 @@ exports.createaddress = async (req, res, next) => {
 
 exports.getalladdressbyuser = async (req, res, next) => {
   try {
-    const userId = req.params.idUser;
+    const userId = req.user._id;
 
     // Tìm địa chỉ của người dùng
     const userAddress = await Address.findOne({ user: userId });
@@ -90,7 +92,7 @@ exports.getalladdressbyuser = async (req, res, next) => {
 };
 exports.getaddressdefault = async (req, res, next) => {
   try {
-    const userId = req.params.idUser;
+    const userId = req.user._id;
 
     const userAddress = await Address.findOne(
       { user: userId, "location.status": true },
@@ -116,8 +118,8 @@ exports.getaddressdefault = async (req, res, next) => {
 };
 
 exports.deleteLocation = async (req, res, next) => {
-  const userId = req.params.userId; // Lấy userId từ params
-  const locationId = req.params.locationId; // Lấy locationId từ params
+  const userId = req.user._id;
+  const locationId = req.params.locationId; 
 
   try {
     // Tìm Address của user và xóa location có locationId
@@ -144,11 +146,16 @@ exports.deleteLocation = async (req, res, next) => {
 
 
 exports.updateDefaultAddress = async (req, res, next) => {
-  const { userId, addressId } = req.body;
+
+  // const { userId, addressId } = req.body;
+  const {addressId} = req.body;
+  const userId = req.user._id;
 
   try {
     // Tìm địa chỉ của người dùng
     const userAddress = await Address.findOne({ user: userId });
+
+    console.log(userAddress);
 
     if (!userAddress) {
       return res.status(404).json({ message: "Không tìm thấy danh sách địa chỉ của người dùng" });

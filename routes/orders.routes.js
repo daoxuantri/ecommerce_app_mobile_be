@@ -1,22 +1,26 @@
 const orderController = require("../controllers/orders.controller");
-
+const auth = require("../middlewares/auth");
 const express = require("express");
 const router = express.Router();
 
 //tao don hang
-router.post("/", orderController.createorder);
+router.post("/", auth.authenticateToken,orderController.createorder);
 // router.post("/login", brandController.login);
 
-router.get("/statisticProduct", orderController.statisticProduct);
+//admin (statisticProduct -> quyen admin)
+router.get("/statisticProduct",orderController.statisticProduct);
+
 //get all don hang 
-router.get("/:iduser", orderController.getallorder);
+router.get("/",auth.authenticateToken, orderController.getallorder);
 
 // get theo status order
-router.get("/:statusOrder/status", orderController.getorderonstatus)
+router.get("/:statusOrder/status", auth.authenticateToken,orderController.getorderonstatus)
 
 //delete don hang -> trong tinh trang [progress]
 
-router.put("/:orderId/cancel", orderController.cancelOrder);
+
+
+router.put("/:orderId/cancel", auth.authenticateToken, orderController.cancelOrder);
 
 //thong ke top 10 sp ban chay (user hoan thanh xong don hang)
 

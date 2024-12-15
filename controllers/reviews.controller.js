@@ -7,7 +7,9 @@ const openai = new OpenAI({
 
 exports.createreview = async (req, res, next) => {
   try {
-    const { userId, productId, content, rating } = req.body;
+    const {productId, content, rating } = req.body;
+    const userId = req.user._id;
+
 
     // Gọi OpenAI API để kiểm tra nội dung bình luận
     const response = await openai.chat.completions.create({

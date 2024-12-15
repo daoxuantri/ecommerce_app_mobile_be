@@ -4,7 +4,10 @@ const Bill = require("../models/bills");
 
 
 exports.createorder = async (req, res, next) => {
-    const { user, productItem, informationUser, paid, billCode } = req.body;
+    const {productItem, informationUser, paid, billCode } = req.body;
+    const user = req.user._id;
+
+
 
     try {
         // Kiểm tra dữ liệu đầu vào
@@ -112,7 +115,7 @@ exports.createorder = async (req, res, next) => {
 
 exports.getallorder = async (req, res, next) => {
     try {
-        const iduser = req.params.iduser;
+        const iduser = req.user._id;
         const { status } = req.query; // Lấy trạng thái từ query parameters
 
         // Tạo điều kiện lọc
@@ -137,75 +140,99 @@ exports.getallorder = async (req, res, next) => {
 
 
 exports.getorderonstatus = async (req, res, next) => {
-    const { user, productItem, address} = req.body;
+    // const {productItem, address} = req.body;
+    // const user = req.user._id 
+
+    // try {
+    //     // Tính tổng tiền của đơn hàng
+    //     const totalOrder = productItem.reduce((acc, cur) => acc + cur.price * cur.quantity, 0);
+
+    //     // Đảm bảo tất cả sản phẩm đều có đầy đủ thông tin `color` và `memory`
+    //     const validatedProductItems = productItem.map((item) => {
+    //         if (!item.color || !item.memory) {
+    //             throw new Error(`Product item must include 'color' and 'memory': ${item.product}`);
+    //         }
+    //         return item;
+    //     });
+
+    //     // Tạo đơn hàng mới
+    //     const newOrder = new Order({
+    //         user: user,
+    //         productItem: validatedProductItems,
+    //         total: totalOrder,
+    //         address: address,
+    //     });
+
+    //     // Lưu đơn hàng vào database
+    //     await newOrder.save();
+
+    //     // Tìm giỏ hàng của người dùng
+    //     const findCart = await Cart.findOne({ user: user });
+    //     if (!findCart) {
+    //         throw new Error("Cart not found for the user");
+    //     }
+
+    //     // Cập nhật giỏ hàng: Loại bỏ sản phẩm trong giỏ dựa trên `product`, `color`, và `memory`
+    //     const productIdsWithDetails = validatedProductItems.map((item) => ({
+    //         product: item.product,
+    //         color: item.color,
+    //         memory: item.memory,
+    //     }));
+
+    //     const updatedCart = await Cart.findOneAndUpdate(
+    //         { user: user },
+    //         {
+    //             $pull: {
+    //                 productItem: {
+    //                     $or: productIdsWithDetails.map((item) => ({
+    //                         product: item.product,
+    //                         color: item.color,
+    //                         memory: item.memory,
+    //                     })),
+    //                 },
+    //             },
+    //         },
+    //         { new: true }
+    //     );
+
+    //     if (updatedCart) {
+    //         // Tính tổng mới cho giỏ hàng sau khi xóa các sản phẩm đã đặt hàng
+    //         const newTotal = updatedCart.productItem.reduce(
+    //             (acc, cur) => acc + cur.price * cur.quantity,
+    //             0
+    //         );
+    //         updatedCart.total = newTotal;
+    //         await updatedCart.save();
+    //     }
+
+    //     // Phản hồi thành công
+    //     return res.status(201).json({
+    //         success: true,
+    //         message: "Order created and cart updated successfully",
+    //         order: newOrder,
+    //     });
+    // } catch (error) {
+    //     console.log('dang tai day');
+    //     next(error);
+    // }
 
     try {
-        // Tính tổng tiền của đơn hàng
-        const totalOrder = productItem.reduce((acc, cur) => acc + cur.price * cur.quantity, 0);
+        const iduser = req.user._id;
+        const { status } = req.query; // Lấy trạng thái từ query parameters
 
-        // Đảm bảo tất cả sản phẩm đều có đầy đủ thông tin `color` và `memory`
-        const validatedProductItems = productItem.map((item) => {
-            if (!item.color || !item.memory) {
-                throw new Error(`Product item must include 'color' and 'memory': ${item.product}`);
-            }
-            return item;
-        });
-
-        // Tạo đơn hàng mới
-        const newOrder = new Order({
-            user: user,
-            productItem: validatedProductItems,
-            total: totalOrder,
-            address: address,
-        });
-
-        // Lưu đơn hàng vào database
-        await newOrder.save();
-
-        // Tìm giỏ hàng của người dùng
-        const findCart = await Cart.findOne({ user: user });
-        if (!findCart) {
-            throw new Error("Cart not found for the user");
+        // Tạo điều kiện lọc
+        const filter = { user: iduser };
+        if (status) {
+            filter.orderStatus = status; // Thêm điều kiện nếu có trạng thái
         }
 
-        // Cập nhật giỏ hàng: Loại bỏ sản phẩm trong giỏ dựa trên `product`, `color`, và `memory`
-        const productIdsWithDetails = validatedProductItems.map((item) => ({
-            product: item.product,
-            color: item.color,
-            memory: item.memory,
-        }));
+        // Tìm tất cả các đơn hàng theo điều kiện
+        const findAllOrder = await Order.find(filter).select('-createdAt -updatedAt -__v');
 
-        const updatedCart = await Cart.findOneAndUpdate(
-            { user: user },
-            {
-                $pull: {
-                    productItem: {
-                        $or: productIdsWithDetails.map((item) => ({
-                            product: item.product,
-                            color: item.color,
-                            memory: item.memory,
-                        })),
-                    },
-                },
-            },
-            { new: true }
-        );
-
-        if (updatedCart) {
-            // Tính tổng mới cho giỏ hàng sau khi xóa các sản phẩm đã đặt hàng
-            const newTotal = updatedCart.productItem.reduce(
-                (acc, cur) => acc + cur.price * cur.quantity,
-                0
-            );
-            updatedCart.total = newTotal;
-            await updatedCart.save();
-        }
-
-        // Phản hồi thành công
-        return res.status(201).json({
+        return res.status(200).json({
             success: true,
-            message: "Order created and cart updated successfully",
-            order: newOrder,
+            message: "Danh sách đơn hàng",
+            order: findAllOrder,
         });
     } catch (error) {
         next(error);
@@ -293,8 +320,8 @@ exports.getorderonstatus = async (req, res, next) => {
 exports.cancelOrder = async (req, res, next) => {
     try {
       const { orderId } = req.params; // Lấy ID đơn hàng từ URL
-      const { status, idUser } = req.body; // Lấy trạng thái và ID người dùng từ request body
-  
+      const { status} = req.body; // Lấy trạng thái và ID người dùng từ request body
+      const idUser = req.user._id;
       // Kiểm tra trạng thái mới có phải "CANCELED" không
       if (status !== "CANCELED") {
         return res.status(400).json({
