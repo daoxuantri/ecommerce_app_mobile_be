@@ -137,6 +137,10 @@ exports.getBills = async (req, res) => {
             path: "productItem.product", // Populates product item details in order
             select: "_id name price images", // Lấy thông tin sản phẩm trong đơn hàng
           },
+          populate: {
+            path: "productItem", // Populates user object from order
+            select: "quantity memory color", // Lấy thông tin người dùng cần thiết
+          }
         })
         .sort({ createdAt: -1 }) // Sắp xếp theo ngày tạo, mới nhất trước
         .skip(skip) // Bỏ qua số hóa đơn tương ứng
@@ -159,3 +163,41 @@ exports.getBills = async (req, res) => {
       res.status(500).json({ success: false, message: "Internal server error" });
     }
   };
+
+  exports.getBillsByUser = async (req, res, next) => {
+    try {
+      const userId = req.params.userId;
+  
+      // Lấy danh sách orders liên quan đến user
+      const orders = await Order.find({ user: userId }).select("_id").lean();
+      if (!orders.length) {
+        return res.status(404).send({
+          success: false,
+          message: "Người dùng không có hóa đơn nào!",
+        });
+      }
+  
+      const orderIds = orders.map((order) => order._id);
+  
+      // Lấy bills theo danh sách orderIds
+      const bills = await Bill.find({ order: { $in: orderIds } })
+        .populate("order") // Populate thông tin order
+        .lean();
+  
+      if (!bills.length) {
+        return res.status(404).send({
+          success: false,
+          message: "Người dùng không có hóa đơn nào!",
+        });
+      }
+  
+      return res.status(200).send({
+        success: true,
+        message: "Danh sách hóa đơn của người dùng",
+        data: bills,
+      });
+    } catch (err) {
+      next(err);
+    }
+  };
+  
