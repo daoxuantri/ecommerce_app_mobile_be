@@ -13,12 +13,8 @@ router.post("/login", userController.login);
 
 router.post("/resetpass", userController.resetpass);
 router.put("/:id",uploadCloud.array('images'), userController.updateUser);
-<<<<<<< HEAD
 
-
-=======
 router.delete('/:id', userController.deleteUser);
->>>>>>> 631d1e7cabd60bd93f42b90ceddb06c653a48751
 router.get("/:id", userController.getuserbyid);
 
 router.get("/:id/cart", userController.getcartbyuser);
