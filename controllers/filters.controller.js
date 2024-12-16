@@ -27,16 +27,6 @@ exports.createFilter = async (req, res, next) => {
     }
 };
 
-exports.updateFilterById = async (req, res, next) => {
-    try {
-        const updatedFilter = await Filter.findByIdAndUpdate(req.params.id, req.body, { new: true });
-        if (!updatedFilter) return res.status(404).json({ message: "Filter not found" });
-        res.status(200).json(updatedFilter);
-    } catch (err) {
-        next(err);
-    }
-};
-
 exports.deleteFilterById = async (req, res, next) => {
     try {
         const deletedFilter = await Filter.findByIdAndDelete(req.params.id);
@@ -50,7 +40,7 @@ exports.deleteFilterById = async (req, res, next) => {
 exports.getFilters = async (req, res, next) => {
     try {
         const filters = await Filter.find()
-            .populate("categoryId", "name") // populate categoryId để lấy tên của category
+            .populate("categoryId", "name images") // populate categoryId để lấy tên của category
             .exec();
         
         res.status(200).json({
@@ -69,7 +59,8 @@ exports.getFilters = async (req, res, next) => {
 exports.updateFilterById = async (req, res, next) => {
     const filterId = req.params.id;
     const { categoryId, filters } = req.body; // Lấy categoryId và filters từ body
-  
+    console.log(filterId);
+    console.log(JSON.stringify(filters));
     try {
       // Tìm bộ lọc theo ID và cập nhật
       const updatedFilter = await Filter.findByIdAndUpdate(
@@ -84,7 +75,7 @@ exports.updateFilterById = async (req, res, next) => {
           message: "Filter not found"
         });
       }
-  
+      console.log(JSON.stringify(updatedFilter));
       res.status(200).json({
         success: true,
         data: updatedFilter

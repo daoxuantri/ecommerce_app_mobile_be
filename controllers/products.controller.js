@@ -51,7 +51,11 @@ exports.updateproduct = async (req, res, next) => {
   try {
     const { idproduct, name, category, brand, description, status } = req.body; // Đã loại bỏ trường price
     let updateFields = {};
-
+    console.log("name: ", name);
+    console.log("category: ", category);
+    console.log("brand: ", brand);
+    console.log("description: ", description);
+    console.log("status: ", status);
     // Kiểm tra và chỉ thêm các trường có trong yêu cầu
     if (name) updateFields.name = name;
     if (category) updateFields.category = category;

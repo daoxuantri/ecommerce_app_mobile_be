@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 const User = require("../models/users");
-
+const Employee = require("../models/employees");
 async function authenticateToken(req, res, next) {
   // ACCESS TOKEN FROM HEADER, REFRESH TOKEN FROM COOKIE
   const token = req.headers['authorization'];
@@ -18,6 +18,25 @@ async function authenticateToken(req, res, next) {
     res.status(401).json("You're not authenticated");
   }
 };
+
+async function authenticateTokenAdmin(req, res, next) {
+  // ACCESS TOKEN FROM HEADER, REFRESH TOKEN FROM COOKIE
+  const token = req.headers['authorization'];
+  if (token) {
+    const accessToken = token.split(" ")[1];
+    try {
+      const user = await jwt.verify(accessToken, process.env.JWT);
+      const resultUser = await Employee.findOne({ _id: user?.data });
+      req.user = resultUser;
+      next();
+    } catch (err) {
+      res.status(403).json("Token is not valid!");
+    }
+  } else {
+    res.status(401).json("You're not authenticated");
+  }
+};
+
 function generateAccessToken(id){
     return jwt.sign({data: id}, process.env.JWT,{
         expiresIn: "24h"
@@ -101,5 +120,6 @@ module.exports={
     generateAccessToken,
     verifyTokenAndAdmin,
     generateRefreshToken,
-    authenticateLoginToken
+    authenticateLoginToken,
+    authenticateTokenAdmin
 };
