@@ -139,7 +139,20 @@ exports.getempbyid = async (req, res, next) => {
     return next(err);
   }
 };
+exports.getEmployeesById = async(req, res, next) => {
+  try {
+      const { id } = req.params; // Lấy id từ URL
+      const employee = await Employee.findById(id); // Tìm employee theo ID
 
+      if (!employee) {
+          return res.status(404).json({ message: "Employee not found" }); // Không tìm thấy
+      }
+
+      res.status(200).json(employee); // Trả về dữ liệu employee
+  } catch (error) {
+      res.status(500).json({ message: "Server error", error: error.message }); // Lỗi server
+  }
+}
 exports.getProducts = async (req, res, next) => {
   try {
     const {
@@ -589,19 +602,24 @@ exports.getUsers = async (req, res, next) => {
 };
 
 exports.deleteStaff = async (req, res) => {
+  const user = req.user;
+  if (user.role !== 'admin') {
+    return res.status(403).json({ message: "Only admins can delete." });
+  }
+
   try {
     const { id } = req.params;
 
     // Tìm 
     const employee = await Employee.findById(id);
     if (!employee) {
-      return res.status(404).json({ message: "Staff not found" });
+      return res.status(404).json({ message: "Not found" });
     }
 
     await Employee.findByIdAndDelete(id);
     res
       .status(200)
-      .json({ message: "Staff and related data deleted successfully" });
+      .json({ message: "Deleted successfully" });
   } catch (error) {
     console.error("Error deleting staff:", error);
     res

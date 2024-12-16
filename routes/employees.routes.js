@@ -12,12 +12,12 @@ const { verifyHashedData } = require("../util/hashData");
 
 // chỉ có admin mới tạo acc cho user
 //(role admin)
-router.post("/register",employeeController.register);
+router.post("/register",auth.authenticateTokenAdmin,employeeController.register);
 router.post("/login", employeeController.login);
 
 router.get("/products", employeeController.getProducts);
 router.get("/products/sales", employeeController.getProductsOnSales);
-router.post("/products", uploadCloud.array('images'),employeeController.createProduct);
+router.post("/products", auth.authenticateTokenAdmin, uploadCloud.array('images'),employeeController.createProduct);
 router.get("/products/:productId",employeeController.getProductById);
 
 router.get("/brands", employeeController.getBrands);
@@ -25,11 +25,11 @@ router.get("/categories", employeeController.getCategories);
 router.get("/users", employeeController.getUsers);
 router.get("/staffs", employeeController.getEmployees);
 router.get("/orders", employeeController.getOrders);
-
-router.delete("/:id", employeeController.deleteStaff);
-router.put("/:id",uploadCloud.array('images'), employeeController.updateStaff);
+router.get("/:id", employeeController.getEmployeesById);
+router.delete("/:id", auth.authenticateTokenAdmin,employeeController.deleteStaff);
+router.put("/:id",auth.authenticateTokenAdmin,uploadCloud.array('images'), employeeController.updateStaff);
 //resetpass-employee
-router.post("/getempbyid/:id",employeeController.getempbyid);
+router.post("/getempbyid/:id",auth.authenticateTokenAdmin,employeeController.getempbyid);
 router.get("/resetpass",employeeController.resetpass);
 //send email
 router.post("/email_verification/:email", async (req, res) => {

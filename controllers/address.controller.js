@@ -155,8 +155,6 @@ exports.updateDefaultAddress = async (req, res, next) => {
     // Tìm địa chỉ của người dùng
     const userAddress = await Address.findOne({ user: userId });
 
-    console.log(userAddress);
-
     if (!userAddress) {
       return res.status(404).json({ message: "Không tìm thấy danh sách địa chỉ của người dùng" });
     }

@@ -2,9 +2,8 @@ const filterController = require("../controllers/filters.controller");
 
 const express = require("express");
 const router = express.Router();
-router.put("/",  filterController.updateFilterById);
 router.get("/", filterController.getFilters);
-router.post("/:id", filterController.updateFilterById);
+router.put("/:id", filterController.updateFilterById);
 //admin , employee
 router.post("/create",  filterController.createFilter);
 //admin
