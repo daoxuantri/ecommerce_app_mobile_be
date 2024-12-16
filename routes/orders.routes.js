@@ -13,6 +13,9 @@ router.get("/statisticProduct",orderController.statisticProduct);
 //get all don hang 
 router.get("/",auth.authenticateToken, orderController.getallorder);
 
+router.delete("/:orderId", auth.authenticateTokenAdmin,orderController.deleteOrder);
+router.put("/:orderId", auth.authenticateTokenAdmin, orderController.updateOrder);
+router.get("/:orderId", auth.authenticateTokenAdmin, orderController.getOrderById);
 // get theo status order
 router.get("/:statusOrder/status", auth.authenticateToken,orderController.getorderonstatus)
 
