@@ -13,6 +13,36 @@ const {
 
 const PAGE_SIZE = 10;
 
+
+
+exports.countProducts = async (req, res, next) => {
+  try {
+    const { categoryId } = req.query; // Lấy ID danh mục từ query params
+
+    // Đếm tổng số sản phẩm
+    const totalProducts = await Product.countDocuments();
+
+    // Đếm sản phẩm theo danh mục
+    let categoryProductsCount = 0;
+    if (categoryId) {
+      categoryProductsCount = await Product.countDocuments({ category: categoryId });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Thống kê sản phẩm thành công",
+      data: {
+        totalProducts,
+        categoryProductsCount,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+
+
 exports.createproduct = async (req, res, next) => {
   try {
     const { name, category, brand, description, status } = req.body; // Đã loại bỏ trường price

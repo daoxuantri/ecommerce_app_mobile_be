@@ -1,7 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
-const dbConfig = require('./config/db');
+// const dbConfig = require('./config/db');
 const auth=require('./middlewares/auth');
 const {unless} = require('express-unless');
 const middleware = require('./middlewares/error')
@@ -21,13 +21,22 @@ app.use(
 
 
 
-mongoose.connect(dbConfig.db).then(
-    () => {
+// mongoose.connect(dbConfig.db).then(
+//     () => {
+//         console.log("Database Connected");
+//     },(error) =>{
+//         console.log("Database can't be connected" + error);
+//     }
+// )
+
+mongoose.connect(process.env.MONGO)
+    .then(() => {
         console.log("Database Connected");
-    },(error) =>{
-        console.log("Database can't be connected" + error);
-    }
-)
+    })
+    .catch((error) => {
+        console.error("Database can't be connected: " + error);
+    });
+
 app.use(express.json());
 
 app.use("/brands", require("./routes/brands.routes"));
