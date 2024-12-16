@@ -21,7 +21,15 @@ app.use(
 
 
 
-mongoose.connect(dbConfig.db).then(
+// mongoose.connect(dbConfig.db).then(
+//     () => {
+//         console.log("Database Connected");
+//     },(error) =>{
+//         console.log("Database can't be connected" + error);
+//     }
+// )
+
+mongoose.connect(process.env.MONGO).then(
     () => {
         console.log("Database Connected");
     },(error) =>{

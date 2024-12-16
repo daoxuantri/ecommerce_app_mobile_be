@@ -8,6 +8,8 @@ const router = express.Router();
 router.post("/create",uploadCloud.array('images'),  productController.createproduct);
 router.put("/",uploadCloud.array('images'), productController.updateproduct);
 
+
+router.get("/count", productController.countProducts);
 //sort and filter ( brand , rating , keyname , price)
 router.get("/sort", productController.sort);
 //all role
