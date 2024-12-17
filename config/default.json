@@ -4,5 +4,5 @@
   "vnp_Url":"https://sandbox.vnpayment.vn/paymentv2/vpcpay.html",
   "vnp_Api":"https://sandbox.vnpayment.vn/merchant_webapi/api/transaction",
   "vnp_ReturnUrl": "http://127.0.0.1:4000/payment/vnpay_return",
-  "vnp_ReturnUrlv2": "http://127.0.0.1:4000/payment/vnpay_returnv2"
+  "vnp_ReturnUrlv2": "electric-ecommerce-web-fe.vercel.app/payment/vnpay_returnv2"
 }
