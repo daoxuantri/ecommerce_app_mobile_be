@@ -12,7 +12,7 @@ router.get("/statisticProduct",orderController.statisticProduct);
 
 //get all don hang 
 router.get("/",auth.authenticateToken, orderController.getallorder);
-
+router.get("/statistic", orderController.getStatisticsDetails),
 router.delete("/:orderId", auth.authenticateTokenAdmin,orderController.deleteOrder);
 router.put("/:orderId", auth.authenticateTokenAdmin, orderController.updateOrder);
 router.get("/:orderId", auth.authenticateTokenAdmin, orderController.getOrderById);

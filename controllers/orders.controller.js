@@ -381,3 +381,70 @@ exports.statisticProduct = async (req, res, next) => {
     next(error);
   }
 };
+
+exports.getStatisticsDetails = async(req, res, next) => {
+  try {
+    const { year } = req.query; // Lấy năm từ query params
+    const filterYear = year || new Date().getFullYear(); // Mặc định là năm hiện tại
+
+    // Lấy các đơn hàng có trạng thái COMPLETED và thuộc năm được yêu cầu
+    const orders = await Order.aggregate([
+        {
+            $match: {
+                orderStatus: 'COMPLETED',
+                createdAt: {
+                    $gte: new Date(`${filterYear}-01-01`),
+                    $lt: new Date(`${parseInt(filterYear) + 1}-01-01`)
+                }
+            }
+        },
+        {
+            $group: {
+                _id: {
+                    month: { $month: "$createdAt" },
+                    quarter: { $ceil: { $divide: [{ $month: "$createdAt" }, 3] } },
+                    year: { $year: "$createdAt" }
+                },
+                totalRevenue: { $sum: "$total" },
+                count: { $sum: 1 } // Số lượng đơn hàng
+            }
+        }
+    ]);
+
+    // Định dạng dữ liệu đầu ra
+    const monthlyRevenue = [];
+    const quarterlyRevenue = [];
+    const yearlyRevenue = { year: filterYear, totalRevenue: 0, count: 0 };
+
+    orders.forEach(order => {
+        if (order._id.year === parseInt(filterYear)) {
+            yearlyRevenue.totalRevenue += order.totalRevenue;
+            yearlyRevenue.count += order.count;
+
+            // Tổng hợp doanh thu tháng
+            monthlyRevenue[order._id.month - 1] = {
+                month: order._id.month,
+                revenue: order.totalRevenue,
+                count: order.count
+            };
+
+            // Tổng hợp doanh thu quý
+            quarterlyRevenue[order._id.quarter - 1] = {
+                quarter: order._id.quarter,
+                revenue: (quarterlyRevenue[order._id.quarter - 1]?.revenue || 0) + order.totalRevenue,
+                count: (quarterlyRevenue[order._id.quarter - 1]?.count || 0) + order.count
+            };
+        }
+    });
+
+    res.status(200).json({
+        year: filterYear,
+        monthlyRevenue: monthlyRevenue.filter(Boolean), // Loại bỏ các tháng không có dữ liệu
+        quarterlyRevenue: quarterlyRevenue.filter(Boolean), // Loại bỏ các quý không có dữ liệu
+        yearlyRevenue
+    });
+} catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error calculating revenue statistics', error });
+}
+}
