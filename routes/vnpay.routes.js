@@ -310,11 +310,11 @@ router.get('/vnpay_returnv2', function (req, res, next) {
          vnp_Params['vnp_TransactionStatus'] === '00';
  
      if (isTransactionSuccess) {
-           // Giao dịch thành công
-        res.redirect(`http://localhost:3000/order/success?vnp_Amount=${parseInt(vnp_Params['vnp_Amount'], 10) / 100}&vnp_BankCode=${vnp_Params['vnp_BankCode']}&vnp_CardType=${vnp_Params['vnp_CardType']}&vnp_OrderInfo=${encodeURIComponent(vnp_Params['vnp_OrderInfo'])}&vnp_PayDate=${vnp_Params['vnp_PayDate'].slice(0, 4)}-${vnp_Params['vnp_PayDate'].slice(4, 6)}-${vnp_Params['vnp_PayDate'].slice(6, 8)} ${vnp_Params['vnp_PayDate'].slice(8, 10)}:${vnp_Params['vnp_PayDate'].slice(10, 12)}:${vnp_Params['vnp_PayDate'].slice(12, 14)}&vnp_ResponseCode=${vnp_Params['vnp_ResponseCode']}&vnp_TxnRef=${vnp_Params['vnp_TxnRef']}&vnp_TransactionStatus=${vnp_Params['vnp_TransactionStatus']}`);
+        // Giao dịch thành công
+        res.redirect(`https://electric-ecommerce-web-fe.vercel.app/order/success?vnp_Amount=${parseInt(vnp_Params['vnp_Amount'], 10) / 100}&vnp_BankCode=${vnp_Params['vnp_BankCode']}&vnp_CardType=${vnp_Params['vnp_CardType']}&vnp_OrderInfo=${encodeURIComponent(vnp_Params['vnp_OrderInfo'])}&vnp_PayDate=${vnp_Params['vnp_PayDate'].slice(0, 4)}-${vnp_Params['vnp_PayDate'].slice(4, 6)}-${vnp_Params['vnp_PayDate'].slice(6, 8)} ${vnp_Params['vnp_PayDate'].slice(8, 10)}:${vnp_Params['vnp_PayDate'].slice(10, 12)}:${vnp_Params['vnp_PayDate'].slice(12, 14)}&vnp_ResponseCode=${vnp_Params['vnp_ResponseCode']}&vnp_TxnRef=${vnp_Params['vnp_TxnRef']}&vnp_TransactionStatus=${vnp_Params['vnp_TransactionStatus']}`);
       } else {
-          // Giao dịch thất bại hoặc bị hủy
-          res.redirect(`http://localhost:3000/order/failed?vnp_Amount=${parseInt(vnp_Params['vnp_Amount'], 10) / 100}&vnp_BankCode=${vnp_Params['vnp_BankCode']}&vnp_CardType=${vnp_Params['vnp_CardType']}&vnp_OrderInfo=${encodeURIComponent(vnp_Params['vnp_OrderInfo'])}&vnp_PayDate=${vnp_Params['vnp_PayDate'].slice(0, 4)}-${vnp_Params['vnp_PayDate'].slice(4, 6)}-${vnp_Params['vnp_PayDate'].slice(6, 8)} ${vnp_Params['vnp_PayDate'].slice(8, 10)}:${vnp_Params['vnp_PayDate'].slice(10, 12)}:${vnp_Params['vnp_PayDate'].slice(12, 14)}&vnp_ResponseCode=${vnp_Params['vnp_ResponseCode']}&vnp_TxnRef=${vnp_Params['vnp_TxnRef']}&vnp_TransactionStatus=${vnp_Params['vnp_TransactionStatus']}`);
+        // Giao dịch thất bại hoặc bị hủy
+        res.redirect(`https://electric-ecommerce-web-fe.vercel.app/order/failed?vnp_Amount=${parseInt(vnp_Params['vnp_Amount'], 10) / 100}&vnp_BankCode=${vnp_Params['vnp_BankCode']}&vnp_CardType=${vnp_Params['vnp_CardType']}&vnp_OrderInfo=${encodeURIComponent(vnp_Params['vnp_OrderInfo'])}&vnp_PayDate=${vnp_Params['vnp_PayDate'].slice(0, 4)}-${vnp_Params['vnp_PayDate'].slice(4, 6)}-${vnp_Params['vnp_PayDate'].slice(6, 8)} ${vnp_Params['vnp_PayDate'].slice(8, 10)}:${vnp_Params['vnp_PayDate'].slice(10, 12)}:${vnp_Params['vnp_PayDate'].slice(12, 14)}&vnp_ResponseCode=${vnp_Params['vnp_ResponseCode']}&vnp_TxnRef=${vnp_Params['vnp_TxnRef']}&vnp_TransactionStatus=${vnp_Params['vnp_TransactionStatus']}`);
      }
  } else {
      // Chữ ký không hợp lệ
