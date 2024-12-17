@@ -382,69 +382,132 @@ exports.statisticProduct = async (req, res, next) => {
   }
 };
 
-exports.getStatisticsDetails = async(req, res, next) => {
+exports.getStatisticsDetails = async (req, res, next) => {
   try {
     const { year } = req.query; // Lấy năm từ query params
     const filterYear = year || new Date().getFullYear(); // Mặc định là năm hiện tại
 
-    // Lấy các đơn hàng có trạng thái COMPLETED và thuộc năm được yêu cầu
+    // Lấy các đơn hàng trong năm được yêu cầu
     const orders = await Order.aggregate([
-        {
-            $match: {
-                orderStatus: 'COMPLETED',
-                createdAt: {
-                    $gte: new Date(`${filterYear}-01-01`),
-                    $lt: new Date(`${parseInt(filterYear) + 1}-01-01`)
-                }
-            }
+      {
+        $match: {
+          createdAt: {
+            $gte: new Date(`${filterYear}-01-01`),
+            $lt: new Date(`${parseInt(filterYear) + 1}-01-01`),
+          },
         },
-        {
-            $group: {
-                _id: {
-                    month: { $month: "$createdAt" },
-                    quarter: { $ceil: { $divide: [{ $month: "$createdAt" }, 3] } },
-                    year: { $year: "$createdAt" }
-                },
-                totalRevenue: { $sum: "$total" },
-                count: { $sum: 1 } // Số lượng đơn hàng
-            }
-        }
+      },
+      {
+        $group: {
+          _id: {
+            month: { $month: "$createdAt" },
+            quarter: { $ceil: { $divide: [{ $month: "$createdAt" }, 3] } },
+            year: { $year: "$createdAt" },
+          },
+          // Doanh thu chỉ tính cho trạng thái COMPLETED
+          totalRevenue: {
+            $sum: {
+              $cond: [{ $eq: ["$orderStatus", "COMPLETED"] }, "$total", 0],
+            },
+          },
+          // Đếm số lượng đơn hàng theo từng trạng thái
+          totalOrders: { $sum: 1 },
+          progressCount: {
+            $sum: { $cond: [{ $eq: ["$orderStatus", "PROGRESS"] }, 1, 0] },
+          },
+          deliveryCount: {
+            $sum: { $cond: [{ $eq: ["$orderStatus", "DELIVERY"] }, 1, 0] },
+          },
+          completedCount: {
+            $sum: { $cond: [{ $eq: ["$orderStatus", "COMPLETED"] }, 1, 0] },
+          },
+          canceledCount: {
+            $sum: { $cond: [{ $eq: ["$orderStatus", "CANCELED"] }, 1, 0] },
+          },
+        },
+      },
     ]);
 
     // Định dạng dữ liệu đầu ra
-    const monthlyRevenue = [];
-    const quarterlyRevenue = [];
-    const yearlyRevenue = { year: filterYear, totalRevenue: 0, count: 0 };
+    const monthlyStats = [];
+    const quarterlyStats = [];
+    const yearlyStats = {
+      year: filterYear,
+      totalRevenue: 0,
+      totalOrders: 0,
+      statusCounts: {
+        PROGRESS: 0,
+        DELIVERY: 0,
+        COMPLETED: 0,
+        CANCELED: 0,
+      },
+    };
 
-    orders.forEach(order => {
-        if (order._id.year === parseInt(filterYear)) {
-            yearlyRevenue.totalRevenue += order.totalRevenue;
-            yearlyRevenue.count += order.count;
+    orders.forEach((order) => {
+      if (order._id.year === parseInt(filterYear)) {
+        // Tổng hợp số liệu cho năm
+        yearlyStats.totalRevenue += order.totalRevenue;
+        yearlyStats.totalOrders += order.totalOrders;
+        yearlyStats.statusCounts.PROGRESS += order.progressCount;
+        yearlyStats.statusCounts.DELIVERY += order.deliveryCount;
+        yearlyStats.statusCounts.COMPLETED += order.completedCount;
+        yearlyStats.statusCounts.CANCELED += order.canceledCount;
 
-            // Tổng hợp doanh thu tháng
-            monthlyRevenue[order._id.month - 1] = {
-                month: order._id.month,
-                revenue: order.totalRevenue,
-                count: order.count
-            };
+        // Tổng hợp số liệu cho tháng
+        monthlyStats.push({
+          month: order._id.month,
+          totalRevenue: order.totalRevenue,
+          totalOrders: order.totalOrders,
+          statusCounts: {
+            PROGRESS: order.progressCount,
+            DELIVERY: order.deliveryCount,
+            COMPLETED: order.completedCount,
+            CANCELED: order.canceledCount,
+          },
+        });
 
-            // Tổng hợp doanh thu quý
-            quarterlyRevenue[order._id.quarter - 1] = {
-                quarter: order._id.quarter,
-                revenue: (quarterlyRevenue[order._id.quarter - 1]?.revenue || 0) + order.totalRevenue,
-                count: (quarterlyRevenue[order._id.quarter - 1]?.count || 0) + order.count
-            };
+        // Tổng hợp số liệu cho quý
+        const quarterIndex = quarterlyStats.findIndex(
+          (q) => q.quarter === order._id.quarter
+        );
+        if (quarterIndex >= 0) {
+          quarterlyStats[quarterIndex].totalRevenue += order.totalRevenue;
+          quarterlyStats[quarterIndex].totalOrders += order.totalOrders;
+          quarterlyStats[quarterIndex].statusCounts.PROGRESS +=
+            order.progressCount;
+          quarterlyStats[quarterIndex].statusCounts.DELIVERY +=
+            order.deliveryCount;
+          quarterlyStats[quarterIndex].statusCounts.COMPLETED +=
+            order.completedCount;
+          quarterlyStats[quarterIndex].statusCounts.CANCELED +=
+            order.canceledCount;
+        } else {
+          quarterlyStats.push({
+            quarter: order._id.quarter,
+            totalRevenue: order.totalRevenue,
+            totalOrders: order.totalOrders,
+            statusCounts: {
+              PROGRESS: order.progressCount,
+              DELIVERY: order.deliveryCount,
+              COMPLETED: order.completedCount,
+              CANCELED: order.canceledCount,
+            },
+          });
         }
+      }
     });
 
     res.status(200).json({
-        year: filterYear,
-        monthlyRevenue: monthlyRevenue.filter(Boolean), // Loại bỏ các tháng không có dữ liệu
-        quarterlyRevenue: quarterlyRevenue.filter(Boolean), // Loại bỏ các quý không có dữ liệu
-        yearlyRevenue
+      year: filterYear,
+      monthlyStats,
+      quarterlyStats,
+      yearlyStats,
     });
-} catch (error) {
+  } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Error calculating revenue statistics', error });
-}
-}
+    res
+      .status(500)
+      .json({ message: "Error calculating revenue statistics", error });
+  }
+};
+
