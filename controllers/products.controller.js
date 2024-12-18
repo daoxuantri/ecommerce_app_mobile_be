@@ -591,17 +591,16 @@ exports.searchProduct = async (req, res, next) => {
 
 exports.deleteProduct= async(req, res, next)=> {
   try {
-    const {productId} = req.params;
-    const product = await Product.findById(productId);
+    const { productId } = req.params;
+    const product = await Product.findByIdAndDelete(id);
     if (!product) {
-      return res.status(404).send({ success: false, message: "Không tìm thấy sản phẩm" });
-      }
-      // Xóa sản phẩm
-      await product.static.delete();
-      res.status(200).json({ success: true, message: "Xóa sản phẩm thành công" });
-      
+      return res
+        .status(404)
+        .json({ success: false, message: "Sản phẩm không tìm thấy" });
+    }
+    res.status(200).json({ success: true, message: "Xóa sản phẩm thành công" });
   } catch (error) {
-    console.error("Error deleting product:", error);
+    console.error("Error in deleteProduct:", error);
     next(error);
   }
 };
