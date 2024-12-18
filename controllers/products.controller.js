@@ -592,7 +592,7 @@ exports.searchProduct = async (req, res, next) => {
 exports.deleteProduct= async(req, res, next)=> {
   try {
     const { productId } = req.params;
-    const product = await Product.findByIdAndDelete(id);
+    const product = await Product.findByIdAndDelete(productId);
     if (!product) {
       return res
         .status(404)
